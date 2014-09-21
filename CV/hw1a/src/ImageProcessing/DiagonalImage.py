@@ -18,28 +18,33 @@ try:
     width = im.size[0]
     height = im.size[1]
     imList = list(im.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
-    tempList = []
-#
-# This nest loop dealing with image data into 2 dimension list pixel by pixel.
-    for i in range(height):
-        tempList.insert(i, imList[i:(i+1)*width])
-    
     dList = []
-
-    for i in range(width):
+#
+# This loop dealing with image data into 2 dimension list pixel by pixel.
+    for i in range(height):
+        dList.insert(i, imList[i:(i+1)*width])
+   
+#   Diagonally mirrored the image.
+    for i in range(1, len(dList)):
         for j in range(i):
-            dList.insert(i*j+j + width, tempList[i][j])
-            dList.insert(i*j + j,tempList[j][i])
+#            print("Before swap, i=", i,"j=",j, dList[i][j], dList[j][i])
+            dList[i][j], dList[j][i] = dList[j][i], dList[i][j]
+#            print("After swap, i=", i,"j=",j, dList[i][j], dList[j][i])
 # Restore the up-side-down image data to image buffer.
     im.putdata(dList)
-#    print(dList[0])
     im.show()
 #    im.save("DLena.bmp")
     im.close()
+# For test Python's list elements swap function.
+#    a = [[1,2,3],[4,5,6],[7,8,9]]
+#    for i in range(1,len(a)):
+#        for j in range(i):
+#            a[i][j], a[j][i] = a[j][i], a[i][j]
+#    print(len(a), a)
 except IOError:
     print("cannot open lena")
 except IndexError:
     print("Index error", i,j)
 except TypeError:
-    print("Type error: tempList[", i,"][",j,"]", tempList[i][j])
-    print(tempList[i][j])
+    print("Type error: dList[", i,"][",j,"]", dList[i][j])
+    print(dList[i][j])
