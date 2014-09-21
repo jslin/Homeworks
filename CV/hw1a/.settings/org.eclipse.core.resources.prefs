@@ -1,5 +1,5 @@
 eclipse.preferences.version=1
-encoding//src/ImageProcessing/DiagonalImage.py=big5
-encoding//src/ImageProcessing/NegativeImage.py=big5
-encoding//src/ImageProcessing/RightsideLeftImage.py=big5
-encoding//src/ImageProcessing/UpsideDownImage.py=big5
+encoding//src/ImageProcessing/DiagonalImage.py=utf-8
+encoding//src/ImageProcessing/NegativeImage.py=utf-8
+encoding//src/ImageProcessing/RightsideLeftImage.py=utf-8
+encoding//src/ImageProcessing/UpsideDownImage.py=utf-8

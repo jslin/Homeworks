@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# coding:big5
+# coding:utf-8
 #
 # Copyright (c) 2014 Chun-Hsien Lin (D03922030). All right reserved.
 """
-¹q¸£µøÄ±§@·~ #2
+é›»è…¦è¦–è¦ºä½œæ¥­ #2
 2014.09.19 v.0.1
-Åª¤J lena.bmp ¹ÏÀÉ«á¡A±N¸Ó¹ÏÀÉ¤W¤UÄA­Ë«á¿é¥X¡C
-¨Ï¥Î Pillow µ{¦¡®w¨Ó³B²z¹ÏÀÉªºÅª¼g¡C
+è®€å…¥ lena.bmp åœ–æª”å¾Œï¼Œå°‡è©²åœ–æª”ä¸Šä¸‹é¡›å€’å¾Œè¼¸å‡ºã€‚
+ä½¿ç”¨ Pillow ç¨‹å¼åº«ä¾†è™•ç†åœ–æª”çš„è®€å¯«ã€‚
 (http://pillow.readthedocs.org/en/latest/index.html)
 """
 from __future__ import print_function
