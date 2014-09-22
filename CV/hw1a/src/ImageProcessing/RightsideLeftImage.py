@@ -24,7 +24,7 @@ try:
     for i in range(height):
         for j in range(width):
             rlList.insert(height*i+j, imList[width*i - j])
-# Restore the up-side-down image data to image buffer.
+# Restore the right-side-left image data to image buffer.
     im.putdata(rlList)
 
     im.show()
