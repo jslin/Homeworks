@@ -20,13 +20,13 @@ try:
     imList = list(im.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
     udList = []
 #
-# This nest loop dealing with image up-side-down pixel by pixel.
-    for i in range(height):
-        for j in range(width):
+# This nest loop dealing with image in column-major that pixel by pixel.
+    for i in range(width):
+        for j in range(height):
             udList.insert(height*i+j, imList[width*height - (width*i+j) - 1])
 
     rlList = []
-#
+
 # This nest loop dealing with image right-side-left pixel by pixel.
     for i in range(height):
         for j in range(width):
@@ -34,7 +34,7 @@ try:
 # Restore the up-side-down image data to image buffer.
     im.putdata(rlList)
     im.show()
-#    im.save("UDLena.bmp")
+    im.save("UDLena.bmp")
     im.close()
 except IOError:
     print("cannot open lena")
