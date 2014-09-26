@@ -18,5 +18,17 @@ try:
     width = im.size[0]
     height = im.size[1]
     imList = list(im.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
+    newIm = im.copy()
+    threshold = 128
+    for i in range(width):
+        for j in range(height):
+            pix_val = im.getpixel((i,j))
+            if pix_val >= threshold :
+                newIm.putpixel((i,j), 255)
+            else:
+                newIm.putpixel((i,j), 0)
+    newIm.show()
+    im.close()
+    newIm.close()
 except IOError:
     print("cannot open lena")
