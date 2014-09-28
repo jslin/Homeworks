@@ -27,6 +27,19 @@ try:
                 newIm.putpixel((i,j), 255)
             else:
                 newIm.putpixel((i,j), 0)
+#
+# Calculating the Lena image histogram
+# Using Python list count function to accumulate the value of each pixel.
+    histogram =[]
+    for i in range(256):
+        histogram.append(imList.count(i))
+# Check the histogram count. It should be the product of height with width.
+# Lena image is 256 gray-level, 512 x 512.
+    hsum = 0
+    for i in range(256):
+        hsum = hsum + histogram[i]
+    print(histogram)
+    print(hsum)
     newIm.show()
     im.close()
     newIm.close()
