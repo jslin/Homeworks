@@ -19,6 +19,17 @@ try:
     height = im.size[1]
     imList = list(im.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
     newIm = im.copy()
+    
+    width = newIm.size[0]
+    height = newIm.size[1]
+    imList = list(newIm.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
+    dList = []
+#
+# This loop dealing with image data into 2 dimension list pixel by pixel.
+    for i in (range(height)):
+        dList.insert(i, imList[i*width:(i+1)*width])
+
+# Binarize
     threshold = 128
     for i in range(width):
         for j in range(height):
