@@ -42,6 +42,7 @@ dList = []
 rowList =[]
 width = newIm.size[0]
 height = newIm.size[1]
+
 try:
 #
 # Binarize
@@ -61,13 +62,15 @@ try:
     binIm.show()
 #
 # Labeling
-    logFile = open("logfile.txt", "w")
+#
+# Initialization of each 1-pixel with a unique label.
+#
     NEWLABEL = 1
     BLANK = 0
     labList = []
     for j in range(height):
+        rowList = []
         for i in range(width):
-            rowList = []
             if dList[i][j] == 255 :
                 rowList.append(NEWLABEL)
                 NEWLABEL = NEWLABEL + 1
@@ -75,10 +78,21 @@ try:
                 rowList.append(BLANK)
 #            print(i, j, dList[i][j], rowList[i])
         labList.insert(j, rowList)
-        print(len(rowList))
-    logFile.write(str(labList))
-    logFile.close()
-    print(len(labList))
+#
+# First top-down pass for labeled image.
+# Using 4-connected operator.
+#
+    pre_label = labList[0][0]
+    curr_label = labList[1][0]
+    min_label = 1
+    labChanged = True
+    while labChanged:
+        labChanged = False
+        for j in range(height):
+            for i in range(width):
+                if labList[i][j] <> 0:
+                    min_label = labList[i][j]
+                pass
 except TypeError:
     print("Type error")
 except ValueError:

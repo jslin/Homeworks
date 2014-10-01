@@ -44,12 +44,10 @@ try:
     histogram =[]
     for i in range(256):
         histogram.append(imList.count(i))
-# Check the histogram count. It should be the product of height with width.
-# Lena image is 256 gray-level, 512 x 512.
-#    hsum = 0
-#    for i in range(256):
-#        hsum = hsum + histogram[i]
-    print(histogram)
+# Write out a histogram file.
+    logFile = open("histogram.txt", "w")
+    logFile.write(str(histogram))
+    logFile.close()
 #    print(hsum)
     newIm.show()
     newIm.save("Bin_lena.bmp")
