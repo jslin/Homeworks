@@ -20,6 +20,7 @@ import struct
 
 newIm = Image.new("L",(512,512), 128) # Create a blank image, fill up with color = 128.
 imList =[]
+# Open Lena.im
 try:
     f = open("lena.im", "rb")
     f.seek(172) # The first 172 bytes are header. Skip them.
@@ -45,8 +46,8 @@ try:
 #
 # Binarize
     threshold = 128
-    for i in range(width):
-        for j in range(height):
+    for j in range(height):
+        for i in range(width):
             pix_val = binIm.getpixel((i,j))
             if pix_val >= threshold :
                 rowList.append(255)
@@ -54,10 +55,31 @@ try:
             else:
                 rowList.append(0)
                 binIm.putpixel((i,j), 0)
-        dList.insert(i, rowList)
-
+        dList.insert(j, rowList) # Let dList be row-major.
     binIm.putdata(dList)
+    binIm.load()
     binIm.show()
-    
+#
+# Labeling
+    logFile = open("logfile.txt", "w")
+    NEWLABEL = 1
+    BLANK = 0
+    labList = []
+    for j in range(height):
+        for i in range(width):
+            rowList = []
+            if dList[i][j] == 255 :
+                rowList.append(NEWLABEL)
+                NEWLABEL = NEWLABEL + 1
+            else:
+                rowList.append(BLANK)
+#            print(i, j, dList[i][j], rowList[i])
+        labList.insert(j, rowList)
+        print(len(rowList))
+    logFile.write(str(labList))
+    logFile.close()
+    print(len(labList))
 except TypeError:
-    print("Type error") 
+    print("Type error")
+except ValueError:
+    print("Parameter Value error") 
