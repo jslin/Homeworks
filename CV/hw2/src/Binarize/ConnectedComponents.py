@@ -86,13 +86,26 @@ try:
     curr_label = labList[1][0]
     min_label = 1
     labChanged = True
-    while labChanged:
+#    while labChanged:
+#        labChanged = False
+    for j in range(height):
+        for i in range(width):
+            if labList[i][j] > min_label and labList[i-1][j] == 0:
+                min_label = labList[i][j]
+                labChanged = False
+            elif labList[i][j] == 0 and labList[i-1][j] <> 0:
+                labChanged = False
+            elif labList[i][j] == 0 and labList[i-1][j] == 0:
+                labChanged = False
+            elif labList[i][j] > min_label and labList[i-1][j] <> 0:
+                labList[i][j] = min_label
+                labChanged = True
+    if i >= (width - 1) and j >= (height - 1):
         labChanged = False
-        for j in range(height):
-            for i in range(width):
-                if labList[i][j] <> 0:
-                    min_label = labList[i][j]
-                pass
+# Write out a log file.
+    logFile = open("scan1.txt", "w")
+    logFile.write(str(labList))
+    logFile.close()
 except TypeError:
     print("Type error")
 except ValueError:
