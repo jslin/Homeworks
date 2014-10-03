@@ -78,6 +78,10 @@ try:
                 rowList.append(BLANK)
 #            print(i, j, dList[i][j], rowList[i])
         labList.insert(j, rowList)
+# Write out a log file.
+    logFile = open("init.txt", "w")
+    logFile.write(str(labList))
+    logFile.close()
 #
 # First top-down pass for labeled image.
 # Using 4-connected operator.
@@ -86,20 +90,55 @@ try:
     curr_label = labList[1][0]
     min_label = 1
     labChanged = True
+    logFile = open("log.txt", "w")
+# Scan and change label with the first row.
+    for i in range(width):
+        if curr_label > min_label and pre_label == 0:
+            min_label = curr_label
+            pre_label = labList[0][i]
+            labChanged = False
+            logStr = "No change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
+            logFile.write(logStr)
+        elif curr_label == 0 and pre_label <> 0:
+            min_label = pre_label
+            labChanged = False
+            logStr = "No change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
+            logFile.write(logStr)                
+        elif curr_label == 0 and pre_label == 0:
+            labChanged = False
+            logStr = "No change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
+            logFile.write(logStr)                
+        elif curr_label > min_label and pre_label <> 0:
+            logStr = "Change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
+            labList[0][i] = min_label
+            labChanged = True
+            logFile.write(logStr)
 #    while labChanged:
 #        labChanged = False
-    for j in range(height):
-        for i in range(width):
-            if labList[i][j] > min_label and labList[i-1][j] == 0:
-                min_label = labList[i][j]
+    for i in range(1, height):
+        for j in range(width):
+            curr_label = labList[i][j]
+            if curr_label > min_label and pre_label == 0:
+                min_label = curr_label
+                pre_label = labList[i][j]
                 labChanged = False
-            elif labList[i][j] == 0 and labList[i-1][j] <> 0:
+                logStr = "No change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
+                logFile.write(logStr)
+            elif curr_label == 0 and pre_label <> 0:
+                min_label = pre_label
                 labChanged = False
-            elif labList[i][j] == 0 and labList[i-1][j] == 0:
+                logStr = "No change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
+                logFile.write(logStr)                
+            elif curr_label == 0 and pre_label == 0:
                 labChanged = False
-            elif labList[i][j] > min_label and labList[i-1][j] <> 0:
+                logStr = "No change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
+                logFile.write(logStr)                
+            elif curr_label > min_label and pre_label <> 0:
+                logStr = "Change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
                 labList[i][j] = min_label
                 labChanged = True
+                logFile.write(logStr)
+        pre_label = labList[i][j]
     if i >= (width - 1) and j >= (height - 1):
         labChanged = False
 # Write out a log file.
