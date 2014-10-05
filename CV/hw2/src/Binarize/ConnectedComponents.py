@@ -9,8 +9,7 @@ Created on 2014/10/01
 電腦視覺作業HW2 #1
 2014.10.01 v.0.1
 讀入 lena.im 圖檔後，建立一個threshold = 128 的 binarize image。
-接著計算該binarize image的connected components。採用 4-connected 及
-8-connected。
+接著計算該binarize image的connected components。採用 4-connected operator.
 使用 Pillow 程式庫來處理 BMP 圖檔的讀寫。
 (http://pillow.readthedocs.org/en/latest/index.html)
 '''
@@ -82,69 +81,103 @@ try:
     logFile = open("init.txt", "w")
     logFile.write(str(labList))
     logFile.close()
-#
-# First top-down pass for labeled image.
+# Scanning image use 4-connected operator. Using iterative algorithm. 
 # Using 4-connected operator.
 #
-    pre_label = labList[0][0]
-    curr_label = labList[1][0]
-    min_label = 1
+#    min_label = 1
     labChanged = True
     logFile = open("log.txt", "w")
-# Scan and change label with the first row.
-    for i in range(width):
-        if curr_label > min_label and pre_label == 0:
-            min_label = curr_label
-            pre_label = labList[0][i]
-            labChanged = False
-            logStr = "No change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
-            logFile.write(logStr)
-        elif curr_label == 0 and pre_label <> 0:
-            min_label = pre_label
-            labChanged = False
-            logStr = "No change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
-            logFile.write(logStr)                
-        elif curr_label == 0 and pre_label == 0:
-            labChanged = False
-            logStr = "No change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
-            logFile.write(logStr)                
-        elif curr_label > min_label and pre_label <> 0:
-            logStr = "Change " + str(0) + ", " + str(i) + " = " + str(labList[0][i]) + " with " + str(min_label) + "\n"
-            labList[0][i] = min_label
-            labChanged = True
-            logFile.write(logStr)
-#    while labChanged:
-#        labChanged = False
-    for i in range(1, height):
-        for j in range(width):
-            curr_label = labList[i][j]
-            if curr_label > min_label and pre_label == 0:
-                min_label = curr_label
-                pre_label = labList[i][j]
-                labChanged = False
-                logStr = "No change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
-                logFile.write(logStr)
-            elif curr_label == 0 and pre_label <> 0:
-                min_label = pre_label
-                labChanged = False
-                logStr = "No change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
-                logFile.write(logStr)                
-            elif curr_label == 0 and pre_label == 0:
-                labChanged = False
-                logStr = "No change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
-                logFile.write(logStr)                
-            elif curr_label > min_label and pre_label <> 0:
-                logStr = "Change " + str(i) + ", " + str(j) + " = " + str(labList[i][j]) + " with " + str(min_label) + "\n"
-                labList[i][j] = min_label
-                labChanged = True
-                logFile.write(logStr)
-        pre_label = labList[i][j]
-    if i >= (width - 1) and j >= (height - 1):
+    loopCount = 0
+    while labChanged:
         labChanged = False
-# Write out a log file.
-    logFile = open("scan1.txt", "w")
-    logFile.write(str(labList))
+# Top-down pass. Using 4-connected operator.
+        for i in range(height):
+            for j in range(width):
+                curr_label = labList[i][j]
+                # If current label is not zero than starting top-down scan with 4-connected operator.
+                if labList[i][j] != BLANK:
+                    min_label = labList[i][j]
+                    if (i - 1) >= 0 and labList[i-1][j] != 0 and labList[i-1][j] < min_label:
+                        min_label = labList[i-1][j]
+                        labChanged = False
+                    elif (j - 1) >= 0 and labList[i][j-1] != 0 and labList[i][j-1] < min_label:
+                        min_label = labList[i][j-1]
+                        labChanged = False
+                    if labList[i][j] > min_label:
+                        logStr = "Top-down pass " + str(loopCount) + ", labList[" + str(i) + "][" + str(j) + "] = " + str(labList[i][j]) + " changed with " + str(min_label)
+                        logFile.write(logStr + "\n")
+                        labList[i][j] = min_label
+                        labChanged = True
+# Bottom-up pass. Using 4-connected operator.                   
+        for i in range(height-1, 0, -1):
+            for j in range(width-1, 0, -1):
+                curr_label = labList[i][j]
+                if labList[i][j] != BLANK:
+                    if i+1 < height and labList[i+1][j] != 0 and labList[i+1][j] < min_label:
+                        min_label = labList[i+1][j]
+                        labChanged = False
+                    elif j+1 < width and labList[i][j+1] != 0 and labList[i][j+1] < min_label:
+                        min_label = labList[i][j+1]
+                        labChanged = False
+                    if labList[i][j] > min_label:
+                        logStr = "Bottom-up pass " + str(loopCount) + ", labList[" + str(i) + "][" + str(j) + "] = " + str(labList[i][j]) + " changed with " + str(min_label)
+                        logFile.write(logStr + "\n")
+                        labList[i][j] = min_label
+                        labChanged = True
+        loopCount = loopCount + 1
+#        if loopCount >= 100 :
+#            labChanged = False
     logFile.close()
+# Write out a log file.
+    print("Loop count = ", loopCount)
+    logFile = open("scan1.txt", "w")
+    for i in range(height):
+        logFile.write(str(labList[i]) + "\n")
+    logFile.close()
+# Drawing bounding box
+    region = []
+    logFile = open("regions.txt", "w")
+    for i in range(NEWLABEL):
+        region.insert(i,0)
+# Count each region's size.
+    for i in range(height):
+        for j in range(width):
+            region[labList[i][j]] = region[labList[i][j]] + 1
+    for r in range(1, NEWLABEL):
+        if region[r] >= 500:
+            print("Region:" + str(r) + " count = " + str(region[r]))
+            logStr = "Region:" + str(r) + " count = " + str(region[r]) + "\n"
+            logFile.write(logStr)
+            top = height
+            bottom = -1
+            left = width
+            right = -1
+            for i in range(height):
+                for j in range(width):
+                    if labList[i][j] == r:
+                        if (i < top):
+                            top = i
+                        if (i > bottom):
+                            bottom = i
+                        if (j < left):
+                            left = j
+                        if (j > right):
+                            right = j
+            print("Left:", left, " top:", top, " right:", right, " bottom:", bottom)
+            logStr = "Left:" +  str(left) + " top:" + str(top) + " right:" + str(right) + " bottom:" + str(bottom) + "\n"
+            logFile.write(logStr)
+            # Draw vertical lines.
+            for i in range(top, bottom):
+                binIm.putpixel((left, i), 128)
+                binIm.putpixel((right, i), 128)
+            # Draw horizontal lines.
+            for i in range(left, right):
+                binIm.putpixel((i, top), 128)
+                binIm.putpixel((i, bottom), 128)
+    logFile.close()
+    binIm.show()
+    binIm.save("result.bmp")
+    binIm.close()
 except TypeError:
     print("Type error")
 except ValueError:
