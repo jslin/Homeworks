@@ -47,3 +47,14 @@ logFile = open("histogram.txt", "w")
 logFile.write(str(histogram))
 logFile.close()
 newIm.show()
+
+logFile = open("histogram2.txt", "w")
+total_number_pixels = width * height
+h_sum = 0
+s = []
+for i in range(len(histogram)):
+    h_sum = h_sum + histogram[i]
+    s.insert(i, 255 * h_sum / total_number_pixels)
+    logFile.write(str(s[i]) + ", ")
+logFile.close()
+    
