@@ -36,6 +36,7 @@ finally:
 width = newIm.size[0]
 height = newIm.size[1]
 imList = list(newIm.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
+eqIm = newIm.copy()
 #
 # Calculating the Lena image histogram
 # Using Python list count function to accumulate the value of each pixel.
@@ -50,11 +51,20 @@ newIm.show()
 
 logFile = open("histogram2.txt", "w")
 total_number_pixels = width * height
-h_sum = 0
+accu_sum = 0
 s = []
+# Equalize the histogram.
 for i in range(len(histogram)):
-    h_sum = h_sum + histogram[i]
-    s.insert(i, 255 * h_sum / total_number_pixels)
+    accu_sum = accu_sum + histogram[i]
+    s.insert(i, 255 * accu_sum / total_number_pixels)
     logFile.write(str(s[i]) + ", ")
 logFile.close()
+# Put the equalized intensity value to each pixel.
+for i in range(height):
+    for j in range(width):
+        eqIm.putpixel((i,j), s[newIm.getpixel((i,j))])
+eqIm.show()
+eqIm.save("lena_eq.bmp")
+eqIm.close()
+
     
