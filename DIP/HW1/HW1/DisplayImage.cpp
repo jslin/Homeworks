@@ -1,14 +1,15 @@
 //  main.cpp
-//  OpenCVTest
+//  Display an image file.
 //
-//  Created by 木村盆栽 on 2014/10/3.
+//  Created by 林君憲 on 2014/10/17.
 //  Copyright (c) 2014年 Chun-Hsien Lin. All rights reserved.
+//  學號：D03922030
 //
 #include <iostream>
 #include <fstream>
-#include "opencv2/opencv.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv/cvaux.hpp"
+#include "opencv.hpp"
+#include "highgui.h"
+#include "cvaux.hpp"
 
 using namespace std;
 using namespace cv;
