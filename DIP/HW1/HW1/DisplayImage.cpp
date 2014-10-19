@@ -14,7 +14,7 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, const char * argv[])
+int Display(int argc, const char * argv[])
 {
 
     IplImage * image;
