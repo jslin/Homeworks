@@ -8,6 +8,7 @@
  */
 #include <iostream>
 #include <fstream>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include "opencv.hpp"
 #include "highgui.h"
@@ -16,7 +17,7 @@
 using namespace std;
 using namespace cv;
 
-int bilinear(int argc, const char * argv[])
+int main(int argc, const char * argv[])
 {
 	IplImage * image;
     IplImage * newImg;
@@ -54,22 +55,38 @@ int bilinear(int argc, const char * argv[])
     new_height = newImg->height;
     new_width = newImg->width;
     new_step = newImg->widthStep/sizeof(uchar);
-    printf( "Creating a new %dx%d image with %d channels\n" , new_height, new_width, channels);
+    printf( "Creating a new %dx%d image with %d channels that using bilinear interpolation.\n" , new_height, new_width, channels);
     // Using bilinear interpolation
-    for (i = 1; i < new_height - 1; i++)
-    	for (j = 1; j < new_width - 1; j++)
+    for (i = 1; i < new_height - 2; i++)
+    	for (j = 1; j < new_width - 2; j++)
     	{
-    		col = (float)i*height/new_height;
-    		row = (float)j*width/new_width;
-    		s = cvGet2D(image, round(col), round(row));
-    		if ((col>=1) && (row>=1)) {
+    		col = (float)i * height /new_height;
+    		row = (float)j * width / new_width;
+			s = cvGet2D(image, round(col), round(row)); 
+//			printf("(i, j)=(%d, %d), (col, row)=(%d, %d), B=%f, G=%f, R=%f\n", i, j, round(col), round(row), s.val[0], s.val[1], s.val[2]);
+    		if ((col >= 1) && (row >= 1)) {
     			q11 = cvGet2D(image, round(col)-1, round(row)-1);
+//				printf("Q11(col, row)=(%d, %d), B=%f, G=%f, R=%f\n", round(col), round(row), q11.val[0], q11.val[1], q11.val[2]);
     		};
-
+			if ((col <= height - 1) && (row <= width - 1)) {
+				q22 = cvGet2D(image, round(col) + 1, round(row) + 1);
+//				printf("Q22(col, row)=(%d, %d), B=%f, G=%f, R=%f\n", round(col), round(row), q22.val[0], q22.val[1], q22.val[2]);
+			};
+			if ((col <= height) && (row <= width - 1)) {
+				q21 = cvGet2D(image, round(col) + 1, round(row) - 1);
+//				printf("Q21(col, row)=(%d, %d), B=%f, G=%f, R=%f\n", round(col), round(row), q21.val[0], q21.val[1], q21.val[2]);
+			};
+			if ((col <= height) && (row >= 1)) {
+				q12 = cvGet2D(image, round(col) - 1, round(row) + 1);
+//				printf("Q12(col, row)=(%d, %d), B=%f, G=%f, R=%f\n", round(col), round(row), q12.val[0], q12.val[1], q12.val[2]);
+			};
+			new_s.val[0] = (q11.val[0] * (row + 1 - i) * (col + 1 - j)) + (q21.val[0] * (i - (row - 1)*(col + 1 - j))) + (q12.val[0] * (row + 1 - i)*(j - (col - 1))) + (q22.val[0] * (i - (row - 1))*(j - (col - 1)));
+			new_s.val[1] = (q11.val[1] * (row + 1 - i) * (col + 1 - j)) + (q21.val[1] * (i - (row - 1)*(col + 1 - j))) + (q12.val[1] * (row + 1 - i)*(j - (col - 1))) + (q22.val[1] * (i - (row - 1))*(j - (col - 1)));
+			new_s.val[2] = (q11.val[2] * (row + 1 - i) * (col + 1 - j)) + (q21.val[2] * (i - (row - 1)*(col + 1 - j))) + (q12.val[2] * (row + 1 - i)*(j - (col - 1))) + (q22.val[2] * (i - (row - 1))*(j - (col - 1)));
 //    		printf("(i, j)=(%d, %d), B=%f, G=%f, R=%f\n", myround(col) , myround(row), s.val[0],s.val[1],s.val[2]);
-    		new_s.val[0] = s.val[0]; // Blue
-    		new_s.val[1] = s.val[1]; // Green
-    		new_s.val[2] = s.val[2]; // Red
+//    		new_s.val[0] = s.val[0]; // Blue
+//    		new_s.val[1] = s.val[1]; // Green
+//    		new_s.val[2] = s.val[2]; // Red
     		cvSet2D(newImg, i, j, new_s);
     	}
     // Create a image buffer for rotate 45 degree

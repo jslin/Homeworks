@@ -1,5 +1,5 @@
 /*
- * Zoom.cpp
+ * nearest.cpp
  *
  *  Created on: 2014/10/18
  *      Author: Chun-Hsien Lin (D03922030)
@@ -8,10 +8,12 @@
  */
 #include <iostream>
 #include <fstream>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include "opencv.hpp"
 #include "highgui.h"
 #include "cvaux.hpp"
+
 
 using namespace std;
 using namespace cv;
@@ -20,7 +22,7 @@ int myround(float y) {
     return (int)(y + 0.5);
 }
 
-int main(int argc, const char * argv[])
+int nearest(int argc, const char * argv[])
 {
 	IplImage * image;
     IplImage * newImg;
