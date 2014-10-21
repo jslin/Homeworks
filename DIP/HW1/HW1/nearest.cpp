@@ -142,6 +142,9 @@ int nearest(int argc, const char * argv[])
     cvShowImage( "mainWin", image);
     cvShowImage( "zoomWin", newImg);
     cvShowImage( "rotateWin", rotateImg);
+    // save the image
+    cvSaveImage("N_ZoomIn.jpg",newImg);
+    cvSaveImage("N_Rotate.jpg",rotateImg);
     // wait for a key
     cvWaitKey(0);
 
