@@ -37,7 +37,7 @@ try:
 # Dilation
 # Show result and save image
     newIm.show()
-    newIm.save("Dilation_lena.bmp")
+#    newIm.save("Dilation_lena.bmp")
     im.close()
     newIm.close()
 except IOError:
