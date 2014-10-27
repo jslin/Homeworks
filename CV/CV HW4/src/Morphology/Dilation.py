@@ -18,12 +18,7 @@ try:
     im.load() # load image data into memory.
     width = im.size[0]
     height = im.size[1]
-    imList = list(im.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
     binIm = im.copy()
-    
-    width = binIm.size[0]
-    height = binIm.size[1]
-    imList = list(binIm.getdata()) # Get the image data, then convert each pixel to an ordinary sequence.
 
 # Binarize
 # newIm be stored the binary image.
@@ -41,18 +36,30 @@ try:
 #      A dilation by B = 
 #      {x belong to Euclidean 2 space | x = a + b, for some a belong to A , and b belong to B.}
 # Description:
-#      Because of we manipulate binary image, using a list to store kernel. 
+#      Because of we dealing with binary image, using a list to store kernel. 
 #      Each list element is (x, y) coordinate tuple.
 # 
-# Define a type of kernel. It is a disk.
+# Define a type of kernel. It is a disk with origin.
 # 
     kernelList = [(0,0),(-1,0),(0,-1),(1,0),(0,1)]
-# Create a blank image for dilation , fill up with color = 128.
-    dilIm = Image.new("L",(width, height), 128)
+# Create a blank image for dilation , fill up with color = 0 (white).
+    dilIm = Image.new("L",(width, height), 0)
+# Using Dilation definition above to implement.
+#
+    for i in range(width):
+        for j in range(height):
+            if binIm.getpixel((i, j)) == 255 :
+                for p in range(len(kernelList)):
+                    q = kernelList[p][1]
+                    x = i + p
+                    y = j + q
+                    if x in range(width):
+                        if y in range(height):
+                            dilIm.putpixel((x,y), 255)
 # Show result and save image
     binIm.show()
     dilIm.show()
-#    dilIm.save("Dilation_lena.bmp")
+    dilIm.save("Dilation_lena.bmp")
 except IOError:
     print("cannot open lena")
 finally:
