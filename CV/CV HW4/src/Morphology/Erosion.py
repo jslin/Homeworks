@@ -4,9 +4,9 @@
 # Copyright (c) 2014 Chun-Hsien Lin (D03922030). All right reserved.
 """
 電腦視覺作業HW4 #1
-2014.10.22 v.0.1
+2014.10.28 v.0.1
 讀入 lena.bmp 圖檔後，將該圖檔二元化(Threshold = 128)，
-接著再做 mathematical morphology (Dilation)。
+接著再做 mathematical morphology (Erosion)。
 使用 Pillow 程式庫來處理圖檔的讀寫。
 (http://pillow.readthedocs.org/en/latest/index.html)
 """
@@ -31,10 +31,10 @@ try:
                 binIm.putpixel((i,j), 255)
             else:
                 binIm.putpixel((i,j), 0)
-# Dilation
+# Erosion
 # Definition: 
-#      A dilation by B = 
-#      {x belong to Euclidean 2 space | x = a + b, for some a belong to A , and b belong to B.}
+#      A erosion by B = 
+#      {x belong to Euclidean 2 space | x + b belong to A, for every b belong to B.}
 # Description:
 #      Because of we dealing with binary image, using a list to store kernel. 
 #      Each list element is (x, y) coordinate tuple.
@@ -43,27 +43,27 @@ try:
 # 
     octangon = [(-1,2),(0,2),(1,2),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,0),(-1,0),(0,0),(1,0),(2,0),(-2,-1),(-1,-1),(0,-1),(1,-1),(2,-1),(-1,-2),(0,-2),(1,-2)]
 # Create a blank image for dilation , fill up with color = 0 (white).
-    dilIm = Image.new("L",(width, height), 0)
-# Using Dilation definition above to implement.
+    eroIm = Image.new("L",(width, height), 0)
+# Using Erosion definition above to implement.
 #
     for i in range(width):
         for j in range(height):
-            if binIm.getpixel((i, j)) == 255 :
-                for k in range(len(octangon)):
-                    p = octangon[k][0]
-                    q = octangon[k][1]
-                    x = i + p
-                    y = j + q
-                    if x in range(width):
-                        if y in range(height):
-                            dilIm.putpixel((x,y), 255)
+#            if binIm.getpixel((i, j)) == 255 :
+            for k in range(len(octangon)):
+                p = octangon[k][0]
+                q = octangon[k][1]
+                x = i + p
+                y = j + q
+                if (x in range(width)) and (y in range(height)):
+                    if binIm.getpixel((x,y)) == 255:
+                        eroIm.putpixel((x,y), 255)
 # Show result and save image
     binIm.show()
-    dilIm.show()
-    dilIm.save("Dilation_lena.bmp")
+    eroIm.show()
+    eroIm.save("Erosion_lena.bmp")
 except IOError:
     print("cannot open lena")
 finally:
     im.close()
     binIm.close()
-    dilIm.close()
+    eroIm.close()
