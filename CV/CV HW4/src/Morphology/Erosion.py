@@ -31,6 +31,7 @@ try:
                 binIm.putpixel((i,j), 255)
             else:
                 binIm.putpixel((i,j), 0)
+    binIm.show()
 # Erosion
 # Definition: 
 #      A erosion by B = 
@@ -50,15 +51,20 @@ try:
         for j in range(height):
 #            if binIm.getpixel((i, j)) == 255 :
             for k in range(len(octangon)):
+                contain = 1
                 p = octangon[k][0]
                 q = octangon[k][1]
                 x = i + p
                 y = j + q
-                if (x in range(width)) and (y in range(height)):
-                    if binIm.getpixel((x,y)) == 255:
+                while (contain == 1) and (x in range(width)) and (y in range(height)):
+                    if binIm.getpixel((x,y)) == 0:
+                        contain = 0
+                        break
+                    else:
                         eroIm.putpixel((x,y), 255)
+                        contain = 1
 # Show result and save image
-    binIm.show()
+#    binIm.show()
     eroIm.show()
     eroIm.save("Erosion_lena.bmp")
 except IOError:
