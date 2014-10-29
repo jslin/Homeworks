@@ -13,63 +13,42 @@
 from __future__ import print_function
 from PIL import Image
 
-try:
-    im = Image.open("lena.bmp", "r")
-    im.load() # load image data into memory.
-    width = im.size[0]
-    height = im.size[1]
-    binIm = im.copy()
-
-# Binarize
-# newIm be stored the binary image.
-#
-    threshold = 128
-    for i in range(width):
-        for j in range(height):
-            pix_val = im.getpixel((i,j))
-            if pix_val >= threshold :
-                binIm.putpixel((i,j), 255)
-            else:
-                binIm.putpixel((i,j), 0)
-    binIm.show()
-# Erosion
-# Definition: 
-#      A erosion by B = 
-#      {x belong to Euclidean 2 space | x + b belong to A, for every b belong to B.}
-# Description:
-#      Because of we dealing with binary image, using a list to store kernel. 
-#      Each list element is (x, y) coordinate tuple.
-# 
-# Define a type of kernel. It is a octangon with origin.
-# 
-    octangon = [(-1,2),(0,2),(1,2),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,0),(-1,0),(0,0),(1,0),(2,0),(-2,-1),(-1,-1),(0,-1),(1,-1),(2,-1),(-1,-2),(0,-2),(1,-2)]
-# Create a blank image for dilation , fill up with color = 0 (white).
-    eroIm = Image.new("L",(width, height), 0)
-# Using Erosion definition above to implement.
-#
-    for i in range(width):
-        for j in range(height):
-#            if binIm.getpixel((i, j)) == 255 :
-            for k in range(len(octangon)):
+def erosion(imageBuffer, kernel):
+    try:
+        imageBuffer.load() # load image data into memory.
+        width = imageBuffer.size[0]
+        height = imageBuffer.size[1]
+        binIm = imageBuffer.copy()
+    # Erosion
+    # Definition: 
+    #      A erosion by B = 
+    #      {x belong to Euclidean 2 space | x + b belong to A, for every b belong to B.}
+    # Description:
+    #      Because of we dealing with binary image, using a list to store kernel. 
+    #      Each list element is (x, y) coordinate tuple.
+    # 
+    # Create a blank image for dilation , fill up with color = 0 (white).
+        eroIm = Image.new("L",(width, height), 0)
+    # Using Erosion definition above to implement.
+    #
+        for i in range(width):
+            for j in range(height):
                 contain = 1
-                p = octangon[k][0]
-                q = octangon[k][1]
-                x = i + p
-                y = j + q
-                while (contain == 1) and (x in range(width)) and (y in range(height)):
-                    if binIm.getpixel((x,y)) == 0:
+                k = 0
+                # for kernel b, check x + b are belong to a or not.
+                while (k < len(kernel)) and (contain == 1):
+                    p = kernel[k][0]
+                    q = kernel[k][1]
+                    x = i + p
+                    y = j + q
+                    k = k + 1
+                    if (x < 0) or (x >= width) or (y < 0) or (y >= height) or (binIm.getpixel((x,y)) == 0):
                         contain = 0
-                        break
-                    else:
-                        eroIm.putpixel((x,y), 255)
-                        contain = 1
-# Show result and save image
-#    binIm.show()
-    eroIm.show()
-    eroIm.save("Erosion_lena.bmp")
-except IOError:
-    print("cannot open lena")
-finally:
-    im.close()
-    binIm.close()
-    eroIm.close()
+                if (contain == 1):
+                    eroIm.putpixel((i,j), 255)
+        binIm.close()
+    except IOError:
+        print("cannot open lena")
+    finally:
+        binIm.close()
+    return eroIm

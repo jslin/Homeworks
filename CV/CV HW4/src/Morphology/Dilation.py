@@ -13,57 +13,37 @@
 from __future__ import print_function
 from PIL import Image
 
-try:
-    im = Image.open("lena.bmp", "r")
-    im.load() # load image data into memory.
-    width = im.size[0]
-    height = im.size[1]
-    binIm = im.copy()
-
-# Binarize
-# newIm be stored the binary image.
-#
-    threshold = 128
-    for i in range(width):
-        for j in range(height):
-            pix_val = im.getpixel((i,j))
-            if pix_val >= threshold :
-                binIm.putpixel((i,j), 255)
-            else:
-                binIm.putpixel((i,j), 0)
-# Dilation
-# Definition: 
-#      A dilation by B = 
-#      {x belong to Euclidean 2 space | x = a + b, for some a belong to A , and b belong to B.}
-# Description:
-#      Because of we dealing with binary image, using a list to store kernel. 
-#      Each list element is (x, y) coordinate tuple.
-# 
-# Define a type of kernel. It is a octangon with origin.
-# 
-    octangon = [(-1,2),(0,2),(1,2),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,0),(-1,0),(0,0),(1,0),(2,0),(-2,-1),(-1,-1),(0,-1),(1,-1),(2,-1),(-1,-2),(0,-2),(1,-2)]
-# Create a blank image for dilation , fill up with color = 0 (white).
-    dilIm = Image.new("L",(width, height), 0)
-# Using Dilation definition above to implement.
-#
-    for i in range(width):
-        for j in range(height):
-            if binIm.getpixel((i, j)) == 255 :
-                for k in range(len(octangon)):
-                    p = octangon[k][0]
-                    q = octangon[k][1]
-                    x = i + p
-                    y = j + q
-                    if x in range(width):
-                        if y in range(height):
-                            dilIm.putpixel((x,y), 255)
-# Show result and save image
-    binIm.show()
-    dilIm.show()
-    dilIm.save("Dilation_lena.bmp")
-except IOError:
-    print("cannot open lena")
-finally:
-    im.close()
-    binIm.close()
-    dilIm.close()
+def dilation(imageBuffer, kernel):
+    try:
+        imageBuffer.load() # load image data into memory.
+        width = imageBuffer.size[0]
+        height = imageBuffer.size[1]
+        binIm = imageBuffer.copy()
+    # Dilation
+    # Definition: 
+    #      A dilation by B = 
+    #      {x belong to Euclidean 2 space | x = a + b, for some a belong to A , and b belong to B.}
+    # Description:
+    #      Because of we dealing with binary image, using a list to store kernel. 
+    #      Each list element is (x, y) coordinate tuple.
+    # 
+    # Create a blank image for dilation , fill up with color = 0 (white).
+        dilIm = Image.new("L",(width, height), 0)
+    # Using Dilation definition above to implement.
+    #
+        for i in range(width):
+            for j in range(height):
+                if binIm.getpixel((i, j)) == 255 :
+                    for k in range(len(kernel)):
+                        p = kernel[k][0]
+                        q = kernel[k][1]
+                        x = i + p
+                        y = j + q
+                        if x in range(width):
+                            if y in range(height):
+                                dilIm.putpixel((x,y), 255)
+    except IOError:
+        print("cannot open lena")
+    finally:
+        binIm.close()
+    return dilIm
