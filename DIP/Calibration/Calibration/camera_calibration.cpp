@@ -16,7 +16,7 @@
 #include "opencv2/highgui/highgui.hpp"
 
 #ifndef _CRT_SECURE_NO_WARNINGS
-# define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 using namespace std;
@@ -149,7 +149,7 @@ public:
     }
     Mat nextImage()
     {
-        Mat result;
+		Mat result;
         if( inputCapture.isOpened() )
         {
             Mat view0;
@@ -251,26 +251,25 @@ int main(int argc, char* argv[])
 
     for(int i = 0;;++i)
     {
-      Mat view;
-      bool blinkOutput = false;
+		Mat view;
+		bool blinkOutput = false;
 
-      view = s.nextImage();
+		view = s.nextImage();
 
-      //-----  If no more image, or got enough, then stop calibration and show result -------------
-      if( mode == CAPTURING && imagePoints.size() >= (unsigned)s.nrFrames )
-      {
+	    //-----  If no more image, or got enough, then stop calibration and show result -------------
+		if( mode == CAPTURING && imagePoints.size() >= (unsigned)s.nrFrames )
+		{
           if( runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, imagePoints))
               mode = CALIBRATED;
           else
               mode = DETECTION;
-      }
-      if(view.empty())          // If no more images then run calibration, save and stop loop.
-      {
+		}
+		if(view.empty())          // If no more images then run calibration, save and stop loop.
+		{
             if( imagePoints.size() > 0 )
                 runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, imagePoints);
             break;
-      }
-
+		}
 
         imageSize = view.size();  // Format input image.
         if( s.flipVertical )    flip( view, view, 0 );

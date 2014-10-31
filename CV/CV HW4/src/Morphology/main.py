@@ -11,14 +11,17 @@
 (http://pillow.readthedocs.org/en/latest/index.html)
 """
 from __future__ import print_function
-from Morphology import Erosion
-from Morphology import Dilation
+# from Morphology import *
+import Dilation
+import Erosion
 from PIL import Image
 
 def main():
-    # Define a type of kernel. It is a octangon with origin.
+    # Define some kernels.
     # 
     octangon = [(-1,2),(0,2),(1,2),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,0),(-1,0),(0,0),(1,0),(2,0),(-2,-1),(-1,-1),(0,-1),(1,-1),(2,-1),(-1,-2),(0,-2),(1,-2)]
+    kernelJ = [(0,0),(-1,0),(0,-1)]
+    kernelK = [(0,1),(1,1),(1,0)]
     im = Image.open("lena.bmp", "r")
     # Image binarize
     # binIm be stored the binary image.
@@ -36,7 +39,15 @@ def main():
                 binIm.putpixel((i,j), 255)
             else:
                 binIm.putpixel((i,j), 0)
-       
+    # complement binary image
+    complementIm = Image.new("L",(width, height), 0)
+    #
+    for i in range(width):
+        for j in range(height):
+            pix_val = binIm.getpixel((i,j))
+            complementIm.putpixel((i,j), 255-pix_val)
+#    complementIm.show()
+
     eroImage = Erosion.erosion(binIm, octangon)
     eroImage.show()
     eroImage.save("Erosion_lena.bmp")
@@ -51,9 +62,22 @@ def main():
     closingIm = Erosion.erosion(dilImage, octangon)
     closingIm.show()
     closingIm.save("Closing_lena.bmp")
+    # Hit-and-Miss transform
+    HAMImage = Image.new("L",(width, height), 0)
+    tempIm1 = Erosion.erosion(binIm, kernelJ)
+    tempIm2 = Erosion.erosion(complementIm, kernelK)
+    for i in range(width):
+        for j in range(height):
+            if (tempIm1.getpixel((i,j)) == 255) and (tempIm2.getpixel((i,j)) == 255):
+                HAMImage.putpixel((i,j), 255)
+    HAMImage.show()
+    HAMImage.save("HAM_lena.bmp")
+    
     eroImage.close()
     dilImage.close()
     openingIm.close()
     closingIm.close()
+    complementIm.close()
+    HAMImage.close()
     
 main()
