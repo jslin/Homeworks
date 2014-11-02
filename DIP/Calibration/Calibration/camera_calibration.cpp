@@ -147,18 +147,19 @@ public:
         atImageList = 0;
 
     }
-    Mat nextImage()
+    cv::Mat nextImage()
     {
-		Mat result;
+        cout << "Next image. " << endl;
+        cv::Mat result;
         if( inputCapture.isOpened() )
         {
-            Mat view0;
+            cv::Mat view0;
             inputCapture >> view0;
             view0.copyTo(result);
         }
         else if( atImageList < (int)imageList.size() )
             result = imread(imageList[atImageList++], CV_LOAD_IMAGE_COLOR);
-
+        cout << "Leave nextImage(). " << endl;
         return result;
     }
 
@@ -218,7 +219,7 @@ static void read(const FileNode& node, Settings& x, const Settings& default_valu
 
 enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 
-bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs,
+bool runCalibrationAndSave(Settings& s, Size imageSize, cv::Mat&  cameraMatrix, cv::Mat& distCoeffs,
                            vector<vector<Point2f> > imagePoints );
 
 int main(int argc, char* argv[])
@@ -242,7 +243,7 @@ int main(int argc, char* argv[])
     }
 
     vector<vector<Point2f> > imagePoints;
-    Mat cameraMatrix, distCoeffs;
+    cv::Mat cameraMatrix, distCoeffs;
     Size imageSize;
     int mode = s.inputType == Settings::IMAGE_LIST ? CAPTURING : DETECTION;
     clock_t prevTimestamp = 0;
@@ -251,7 +252,7 @@ int main(int argc, char* argv[])
 
     for(int i = 0;;++i)
     {
-		Mat view;
+        cv::Mat view;
 		bool blinkOutput = false;
 
 		view = s.nextImage();
@@ -266,6 +267,7 @@ int main(int argc, char* argv[])
 		}
 		if(view.empty())          // If no more images then run calibration, save and stop loop.
 		{
+            cout << "Counter is " << i << " No more image. " << endl;
             if( imagePoints.size() > 0 )
                 runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, imagePoints);
             break;
@@ -282,15 +284,19 @@ int main(int argc, char* argv[])
         case Settings::CHESSBOARD:
             found = findChessboardCorners( view, s.boardSize, pointBuf,
                 CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
+            cout << i << " Chess board corners found" << endl;
             break;
         case Settings::CIRCLES_GRID:
             found = findCirclesGrid( view, s.boardSize, pointBuf );
+            cout << i << " Circles grid found" << endl;
             break;
         case Settings::ASYMMETRIC_CIRCLES_GRID:
             found = findCirclesGrid( view, s.boardSize, pointBuf, CALIB_CB_ASYMMETRIC_GRID );
+            cout << i << " Asymmetric circles grid found" << endl;
             break;
         default:
             found = false;
+            cout << i << " Not found" << endl;
             break;
         }
 
@@ -299,7 +305,7 @@ int main(int argc, char* argv[])
               // improve the found corners' coordinate accuracy for chessboard
                 if( s.calibrationPattern == Settings::CHESSBOARD)
                 {
-                    Mat viewGray;
+                    cv::Mat viewGray;
                     cvtColor(view, viewGray, COLOR_BGR2GRAY);
                     cornerSubPix( viewGray, pointBuf, Size(11,11),
                         Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
@@ -340,7 +346,7 @@ int main(int argc, char* argv[])
         //------------------------- Video capture  output  undistorted ------------------------------
         if( mode == CALIBRATED && s.showUndistorsed )
         {
-            Mat temp = view.clone();
+            cv::Mat temp = view.clone();
             undistort(temp, view, cameraMatrix, distCoeffs);
         }
 
@@ -360,14 +366,17 @@ int main(int argc, char* argv[])
             imagePoints.clear();
         }
     }
-
+    cout << "Out the for loop." << endl;
     // -----------------------Show the undistorted image for the image list ------------------------
     if( s.inputType == Settings::IMAGE_LIST && s.showUndistorsed )
     {
-        Mat view, rview, map1, map2;
+        cv::Mat view, rview, map1, map2;
+        getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0);
+        cout << "Calling initUndistortRectifyMap()" << endl;
         initUndistortRectifyMap(cameraMatrix, distCoeffs, Mat(),
             getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0),
             imageSize, CV_16SC2, map1, map2);
+        cout << "Return from initUndistortRectifyMap()"<< endl;
 
         for(int i = 0; i < (int)s.imageList.size(); i++ )
         {
@@ -436,11 +445,11 @@ static void calcBoardCornerPositions(Size boardSize, float squareSize, vector<Po
     }
 }
 
-static bool runCalibration( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat& distCoeffs,
-                            vector<vector<Point2f> > imagePoints, vector<Mat>& rvecs, vector<Mat>& tvecs,
+static bool runCalibration( Settings& s, Size& imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
+                           vector<vector<Point2f> > imagePoints, vector<cv::Mat>& rvecs, vector<Mat>& tvecs,
                             vector<float>& reprojErrs,  double& totalAvgErr)
 {
-
+    cout << "In the runCalibration()" << endl;
     cameraMatrix = Mat::eye(3, 3, CV_64F);
     if( s.flag & CV_CALIB_FIX_ASPECT_RATIO )
         cameraMatrix.at<double>(0,0) = 1.0;
@@ -467,7 +476,7 @@ static bool runCalibration( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat
 }
 
 // Print camera parameters to the output file
-static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, Mat& distCoeffs,
+static void saveCameraParams( Settings& s, Size& imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
                               const vector<Mat>& rvecs, const vector<Mat>& tvecs,
                               const vector<float>& reprojErrs, const vector<vector<Point2f> >& imagePoints,
                               double totalAvgErr )
@@ -516,11 +525,11 @@ static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, M
     if( !rvecs.empty() && !tvecs.empty() )
     {
         CV_Assert(rvecs[0].type() == tvecs[0].type());
-        Mat bigmat((int)rvecs.size(), 6, rvecs[0].type());
+        cv::Mat bigmat((int)rvecs.size(), 6, rvecs[0].type());
         for( int i = 0; i < (int)rvecs.size(); i++ )
         {
-            Mat r = bigmat(Range(i, i+1), Range(0,3));
-            Mat t = bigmat(Range(i, i+1), Range(3,6));
+            cv::Mat r = bigmat(Range(i, i+1), Range(0,3));
+            cv::Mat t = bigmat(Range(i, i+1), Range(3,6));
 
             CV_Assert(rvecs[i].rows == 3 && rvecs[i].cols == 1);
             CV_Assert(tvecs[i].rows == 3 && tvecs[i].cols == 1);
@@ -534,20 +543,20 @@ static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, M
 
     if( !imagePoints.empty() )
     {
-        Mat imagePtMat((int)imagePoints.size(), (int)imagePoints[0].size(), CV_32FC2);
+        cv::Mat imagePtMat((int)imagePoints.size(), (int)imagePoints[0].size(), CV_32FC2);
         for( int i = 0; i < (int)imagePoints.size(); i++ )
         {
-            Mat r = imagePtMat.row(i).reshape(2, imagePtMat.cols);
-            Mat imgpti(imagePoints[i]);
+            cv::Mat r = imagePtMat.row(i).reshape(2, imagePtMat.cols);
+            cv::Mat imgpti(imagePoints[i]);
             imgpti.copyTo(r);
         }
         fs << "Image_points" << imagePtMat;
     }
 }
 
-bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs,vector<vector<Point2f> > imagePoints )
+bool runCalibrationAndSave(Settings& s, Size imageSize, cv::Mat&  cameraMatrix, cv::Mat& distCoeffs,vector<vector<Point2f> > imagePoints )
 {
-    vector<Mat> rvecs, tvecs;
+    vector<cv::Mat> rvecs, tvecs;
     vector<float> reprojErrs;
     double totalAvgErr = 0;
 

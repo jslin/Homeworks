@@ -18,7 +18,7 @@ from PIL import Image
 
 def main():
     # Define some kernels.
-    # 
+    #
     octangon = [(-1,2),(0,2),(1,2),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,1),(-1,1),(0,1),(1,1),(2,1),(-2,0),(-1,0),(0,0),(1,0),(2,0),(-2,-1),(-1,-1),(0,-1),(1,-1),(2,-1),(-1,-2),(0,-2),(1,-2)]
     kernelJ = [(0,0),(-1,0),(0,-1)]
     kernelK = [(0,1),(1,1),(1,0)]
@@ -39,14 +39,6 @@ def main():
                 binIm.putpixel((i,j), 255)
             else:
                 binIm.putpixel((i,j), 0)
-    # complement binary image
-    complementIm = Image.new("L",(width, height), 0)
-    #
-    for i in range(width):
-        for j in range(height):
-            pix_val = binIm.getpixel((i,j))
-            complementIm.putpixel((i,j), 255-pix_val)
-#    complementIm.show()
 
     eroImage = Erosion.erosion(binIm, octangon)
     eroImage.show()
@@ -63,6 +55,15 @@ def main():
     closingIm.show()
     closingIm.save("Closing_lena.bmp")
     # Hit-and-Miss transform
+    #
+    # complement binary image
+    complementIm = Image.new("L",(width, height), 0)
+    #
+    for i in range(width):
+        for j in range(height):
+            pix_val = binIm.getpixel((i,j))
+            complementIm.putpixel((i,j), 255-pix_val)
+#    complementIm.show()
     HAMImage = Image.new("L",(width, height), 0)
     tempIm1 = Erosion.erosion(binIm, kernelJ)
     tempIm2 = Erosion.erosion(complementIm, kernelK)
