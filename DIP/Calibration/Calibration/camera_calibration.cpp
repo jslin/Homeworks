@@ -149,7 +149,6 @@ public:
     }
     cv::Mat nextImage()
     {
-        cout << "Next image. " << endl;
         cv::Mat result;
         if( inputCapture.isOpened() )
         {
@@ -159,7 +158,6 @@ public:
         }
         else if( atImageList < (int)imageList.size() )
             result = imread(imageList[atImageList++], CV_LOAD_IMAGE_COLOR);
-        cout << "Leave nextImage(). " << endl;
         return result;
     }
 
@@ -243,7 +241,7 @@ int main(int argc, char* argv[])
     }
 
     vector<vector<Point2f> > imagePoints;
-    cv::Mat cameraMatrix, distCoeffs;
+    cv::Mat cameraMatrix = cv::Mat(), distCoeffs = cv::Mat();
     Size imageSize;
     int mode = s.inputType == Settings::IMAGE_LIST ? CAPTURING : DETECTION;
     clock_t prevTimestamp = 0;
@@ -366,14 +364,15 @@ int main(int argc, char* argv[])
             imagePoints.clear();
         }
     }
-    cout << "Out the for loop." << endl;
+    cout << "Exit the for loop in main()." << endl;
     // -----------------------Show the undistorted image for the image list ------------------------
     if( s.inputType == Settings::IMAGE_LIST && s.showUndistorsed )
     {
         cv::Mat view, rview, map1, map2;
+        cout << "Calling getOptimalNewCameraMatrix() with " << cameraMatrix << ", " << distCoeffs << endl;
         getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0);
         cout << "Calling initUndistortRectifyMap()" << endl;
-        initUndistortRectifyMap(cameraMatrix, distCoeffs, Mat(),
+        initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),
             getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0),
             imageSize, CV_16SC2, map1, map2);
         cout << "Return from initUndistortRectifyMap()"<< endl;

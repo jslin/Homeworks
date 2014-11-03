@@ -1,1 +1,6 @@
 /Debug_with_Cross GCC
+/Debug_with_MacOSX GCC/
+/Release_with_MacOSX GCC/
+/Release_with_LLVM with GCC (MacOSX)/
+/Release_with_LLVM with Clang (MacOSX)/
+/Release_with_Cross GCC/
