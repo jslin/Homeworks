@@ -5,6 +5,7 @@
 //  Copyright (c) 2014年 Chun-Hsien Lin. All rights reserved.
 //  學號：D03922030
 //
+#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include "opencv.hpp"

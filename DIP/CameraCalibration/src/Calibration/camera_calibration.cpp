@@ -32,7 +32,7 @@ static void help()
 class Settings
 {
 public:
-    Settings() : goodInput(false) {}
+	Settings() : goodInput(false) {};
     enum Pattern { NOT_EXISTING, CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
     enum InputType {INVALID, CAMERA, VIDEO_FILE, IMAGE_LIST};
 
@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
 		}
 		if(view.empty())          // If no more images then run calibration, save and stop loop.
 		{
-            cout << "Counter is " << i << " No more image. " << endl;
+//            cout << "Counter is " << i << " No more image. " << endl;
             if( imagePoints.size() > 0 )
                 runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, imagePoints);
             break;
@@ -364,7 +364,7 @@ int main(int argc, char* argv[])
             imagePoints.clear();
         }
     }
-    cout << "Exit the for loop in main()." << endl;
+//    cout << "Exit the for loop in main()." << endl;
     // -----------------------Show the undistorted image for the image list ------------------------
     if( s.inputType == Settings::IMAGE_LIST && s.showUndistorsed )
     {
@@ -448,7 +448,7 @@ static bool runCalibration( Settings& s, Size& imageSize, cv::Mat& cameraMatrix,
                            vector<vector<Point2f> > imagePoints, vector<cv::Mat>& rvecs, vector<Mat>& tvecs,
                             vector<float>& reprojErrs,  double& totalAvgErr)
 {
-    cout << "In the runCalibration()" << endl;
+//    cout << "In the runCalibration()" << endl;
     cameraMatrix = Mat::eye(3, 3, CV_64F);
     if( s.flag & CV_CALIB_FIX_ASPECT_RATIO )
         cameraMatrix.at<double>(0,0) = 1.0;
