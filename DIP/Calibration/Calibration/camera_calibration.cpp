@@ -369,13 +369,13 @@ int main(int argc, char* argv[])
     if( s.inputType == Settings::IMAGE_LIST && s.showUndistorsed )
     {
         cv::Mat view, rview, map1, map2;
-        cout << "Calling getOptimalNewCameraMatrix() with " << cameraMatrix << ", " << distCoeffs << endl;
-        getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0);
-        cout << "Calling initUndistortRectifyMap()" << endl;
+//        cout << "Calling getOptimalNewCameraMatrix() with " << cameraMatrix << ", " << distCoeffs << endl;
+//        getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0);
+//        cout << "Calling initUndistortRectifyMap()" << endl;
         initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),
             getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0),
             imageSize, CV_16SC2, map1, map2);
-        cout << "Return from initUndistortRectifyMap()"<< endl;
+//        cout << "Return from initUndistortRectifyMap()"<< endl;
 
         for(int i = 0; i < (int)s.imageList.size(); i++ )
         {
