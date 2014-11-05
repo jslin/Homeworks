@@ -7,211 +7,261 @@
  *
  */
 #include <iostream>
+#include <sstream>
+#include <time.h>
+#include <stdio.h>
 #include <fstream>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "opencv.hpp"
-#include "highgui.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/highgui/highgui.hpp"
 #include "cvaux.hpp"
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 
 using namespace std;
 using namespace cv;
 
+
+class Settings
+{
+public:
+	Settings() : goodInput(false) {};
+	enum Pattern { NOT_EXISTING, CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
+	enum InputType { INVALID, CAMERA, VIDEO_FILE, IMAGE_LIST };
+
+	void write(FileStorage& fs) const                        //Write serialization for this class
+	{
+		fs << "{" << "BoardSize_Width" << boardSize.width
+			<< "BoardSize_Height" << boardSize.height
+			<< "Square_Size" << squareSize
+			<< "Calibrate_Pattern" << patternToUse
+			<< "Calibrate_NrOfFrameToUse" << nrFrames
+			<< "Calibrate_FixAspectRatio" << aspectRatio
+			<< "Calibrate_AssumeZeroTangentialDistortion" << calibZeroTangentDist
+			<< "Calibrate_FixPrincipalPointAtTheCenter" << calibFixPrincipalPoint
+
+			<< "Write_DetectedFeaturePoints" << bwritePoints
+			<< "Write_extrinsicParameters" << bwriteExtrinsics
+			<< "Write_outputFileName" << outputFileName
+
+			<< "Show_UndistortedImage" << showUndistorsed
+
+			<< "Input_FlipAroundHorizontalAxis" << flipVertical
+			<< "Input_Delay" << delay
+			<< "Input" << input
+			<< "}";
+	}
+	void read(const FileNode& node)                          //Read serialization for this class
+	{
+		node["BoardSize_Width"] >> boardSize.width;
+		node["BoardSize_Height"] >> boardSize.height;
+		node["Calibrate_Pattern"] >> patternToUse;
+		node["Square_Size"] >> squareSize;
+		node["Calibrate_NrOfFrameToUse"] >> nrFrames;
+		node["Calibrate_FixAspectRatio"] >> aspectRatio;
+		node["Write_DetectedFeaturePoints"] >> bwritePoints;
+		node["Write_extrinsicParameters"] >> bwriteExtrinsics;
+		node["Write_outputFileName"] >> outputFileName;
+		node["Calibrate_AssumeZeroTangentialDistortion"] >> calibZeroTangentDist;
+		node["Calibrate_FixPrincipalPointAtTheCenter"] >> calibFixPrincipalPoint;
+		node["Input_FlipAroundHorizontalAxis"] >> flipVertical;
+		node["Show_UndistortedImage"] >> showUndistorsed;
+		node["Input"] >> input;
+		node["Input_Delay"] >> delay;
+		interprate();
+	}
+	void interprate()
+	{
+		goodInput = true;
+		if (boardSize.width <= 0 || boardSize.height <= 0)
+		{
+			cerr << "Invalid Board size: " << boardSize.width << " " << boardSize.height << endl;
+			goodInput = false;
+		}
+		if (squareSize <= 10e-6)
+		{
+			cerr << "Invalid square size " << squareSize << endl;
+			goodInput = false;
+		}
+		if (nrFrames <= 0)
+		{
+			cerr << "Invalid number of frames " << nrFrames << endl;
+			goodInput = false;
+		}
+
+		if (input.empty())      // Check for valid input
+			inputType = INVALID;
+		else
+		{
+			if (input[0] >= '0' && input[0] <= '9')
+			{
+				stringstream ss(input);
+				ss >> cameraID;
+				inputType = CAMERA;
+			}
+			else
+			{
+				if (readStringList(input, imageList))
+				{
+					inputType = IMAGE_LIST;
+					nrFrames = (nrFrames < (int)imageList.size()) ? nrFrames : (int)imageList.size();
+				}
+				else
+					inputType = VIDEO_FILE;
+			}
+			if (inputType == CAMERA)
+				inputCapture.open(cameraID);
+			if (inputType == VIDEO_FILE)
+				inputCapture.open(input);
+			if (inputType != IMAGE_LIST && !inputCapture.isOpened())
+				inputType = INVALID;
+		}
+		if (inputType == INVALID)
+		{
+			cerr << " Inexistent input: " << input;
+			goodInput = false;
+		}
+
+		flag = 0;
+		if (calibFixPrincipalPoint) flag |= CV_CALIB_FIX_PRINCIPAL_POINT;
+		if (calibZeroTangentDist)   flag |= CV_CALIB_ZERO_TANGENT_DIST;
+		if (aspectRatio)            flag |= CV_CALIB_FIX_ASPECT_RATIO;
+
+
+		calibrationPattern = NOT_EXISTING;
+		if (!patternToUse.compare("CHESSBOARD")) calibrationPattern = CHESSBOARD;
+		if (!patternToUse.compare("CIRCLES_GRID")) calibrationPattern = CIRCLES_GRID;
+		if (!patternToUse.compare("ASYMMETRIC_CIRCLES_GRID")) calibrationPattern = ASYMMETRIC_CIRCLES_GRID;
+		if (calibrationPattern == NOT_EXISTING)
+		{
+			cerr << " Inexistent camera calibration mode: " << patternToUse << endl;
+			goodInput = false;
+		}
+		atImageList = 0;
+
+	}
+	cv::Mat nextImage()
+	{
+		cv::Mat result;
+		if (inputCapture.isOpened())
+		{
+			cv::Mat view0;
+			inputCapture >> view0;
+			view0.copyTo(result);
+		}
+		else if (atImageList < (int)imageList.size())
+			result = imread(imageList[atImageList++], CV_LOAD_IMAGE_COLOR);
+		return result;
+	}
+
+	static bool readStringList(const string& filename, vector<string>& l)
+	{
+		l.clear();
+		FileStorage fs(filename, FileStorage::READ);
+		if (!fs.isOpened())
+			return false;
+		FileNode n = fs.getFirstTopLevelNode();
+		if (n.type() != FileNode::SEQ)
+			return false;
+		FileNodeIterator it = n.begin(), it_end = n.end();
+		for (; it != it_end; ++it)
+			l.push_back((string)*it);
+		return true;
+	}
+public:
+	Size boardSize;            // The size of the board -> Number of items by width and height
+	Pattern calibrationPattern;// One of the Chessboard, circles, or asymmetric circle pattern
+	float squareSize;          // The size of a square in your defined unit (point, millimeter,etc).
+	int nrFrames;              // The number of frames to use from the input for calibration
+	float aspectRatio;         // The aspect ratio
+	int delay;                 // In case of a video input
+	bool bwritePoints;         //  Write detected feature points
+	bool bwriteExtrinsics;     // Write extrinsic parameters
+	bool calibZeroTangentDist; // Assume zero tangential distortion
+	bool calibFixPrincipalPoint;// Fix the principal point at the center
+	bool flipVertical;          // Flip the captured images around the horizontal axis
+	string outputFileName;      // The name of the file where to write
+	bool showUndistorsed;       // Show undistorted images after calibration
+	string input;               // The input ->
+
+	int cameraID;
+	vector<string> imageList;
+	int atImageList;
+	VideoCapture inputCapture;
+	InputType inputType;
+	bool goodInput;
+	int flag;
+
+private:
+	string patternToUse;
+
+
+};
+
+static void read(const FileNode& node, Settings& x, const Settings& default_value = Settings())
+{
+	if (node.empty())
+		x = default_value;
+	else
+		x.read(node);
+}
+
+
 int main(int argc, const char * argv[])
 {
-	IplImage * image;
-    IplImage * newImg;
-    IplImage * rotateImg;
-    int height, width, step, channels, depth;
-    int new_height, new_width, new_step;
-    int rotate_height, rotate_width, rotate_step;
-    uchar *data;
-    uchar *new_data;
-    uchar *rotate_data;
-    int i, j;
-    CvScalar new_s;
-	double col, row;
-	double r1r, r1g, r1b, r2r, r2g, r2b;
-	double factor1, factor2, factor3, factor4;
-	CvScalar q11, q12, q21, q22;
-	int finalR, finalG, finalB;
+	Settings s;
+	std::string calibration_Time;
 
-    image = cvLoadImage( argv[1], 1);
+	vector<vector<Point2f> > imagePoints;
+	cv::Mat cameraMatrix = cv::Mat(), distCoeffs = cv::Mat();
+	Size imageSize;
+	cv::Mat view;
+	cv::Mat rview, map1, map2;
+	vector<int> compression_params;
 
-    if (argc != 2 || !image)
-    {
-        printf( "Could not load image file: %s\n" , argv[1]);
-        exit(0);
-    }
-    // get the original image data
-    height = image->height;
-    width = image->width;
-    step = image->widthStep;
-    depth = image->depth;
-    channels = image->nChannels;
-    data = ( uchar *)image->imageData;
+	const string inputSettingsFile = argc > 1 ? argv[1] : "out_camera_data.xml";
+	FileStorage fs(inputSettingsFile, FileStorage::READ); // Read the settings
+	if (!fs.isOpened())
+	{
+		cout << "Could not open the configuration file: \"" << inputSettingsFile << "\"" << endl;
+		return -1;
+	}
 
-    printf( "Processing a %dx%d image with %d channels %d depth\n" , height, width, channels, depth);
-    // create a new zoom image buffer
-    newImg = cvCreateImage(cvSize(width*1.5,height*1.5), IPL_DEPTH_8U, channels);
-    new_data = (uchar *)newImg->imageData;
-    new_height = newImg->height;
-    new_width = newImg->width;
-    new_step = newImg->widthStep/sizeof(uchar);
-    printf( "Creating a new %dx%d image with %d channels that using bilinear interpolation.\n" , new_height, new_width, channels);
-    // Using bilinear interpolation
-    for (i = 1; i < new_height - 2; i++)
-    	for (j = 1; j < new_width - 2; j++)
-    	{
-    		// incremental step for original image column and row.
-    		col = (float)i * height /new_height;
-    		row = (float)j * width / new_width;
-			// Get the intensity of the original image's nearest diagonal 4-neighbor pixels.
-			// Note that, accessing the pixel of i-row, j-column, the row indexing range is [0, height -1],
-			// column indexing range is [0, width - 1].
-    		q11 = cvGet2D(image, round(col) - 1, round(row) - 1);
-    		q22 = cvGet2D(image, round(col) + 1, round(row) + 1);
-    		q21 = cvGet2D(image, round(col) + 1, round(row) - 1);
-    		q12 = cvGet2D(image, round(col) - 1, round(row) + 1);
-    		// Bilinear interpolation.
-    		// round(row) + 1 is point x2. round(row) - 1 is point x1.
-    		factor1 = round(row) + 1 - row; // x2 - x
-    		factor2 = row - (round(row) - 1); // x - x1
-    		r1b = (q11.val[0] * factor1 / 2) + (q21.val[0] * factor2 / 2);
-    		r1g = (q11.val[1] * factor1 / 2) + (q21.val[1] * factor2 / 2);
-    		r1r = (q11.val[2] * factor1 / 2) + (q21.val[2] * factor2 / 2);
-    		r2b = (q12.val[0] * factor1 / 2) + (q22.val[0] * factor2 / 2);
-    		r2g = (q12.val[1] * factor1 / 2) + (q22.val[1] * factor2 / 2);
-    		r2r = (q12.val[2] * factor1 / 2) + (q22.val[2] * factor2 / 2);
+	fs["Settings"] >> s;
+	fs["calibration_Time"] >> calibration_Time;
+	fs["Camera_Matrix"] >> cameraMatrix;
+	fs["Distortion_Coefficients"] >> distCoeffs;
 
-    		factor3 = round(col) + 1 - col; // y2 - y
-    		factor4 = col - (round(col) - 1); // y - y1
-    		finalB = (r1b * factor3) / 2 + r2b * factor4 / 2; // Blue
-    		finalG = (r1g * factor3) / 2 + r2g * factor4 / 2; // Green
-    		finalR = (r1r * factor3) / 2 + r2r * factor4 / 2; // Red
-    		// Clamp the RBG values to a value between 0 and 255
-    		if (finalB >= 255) finalB = 255;
-    		if (finalB <= 0) finalB = 0;
-    		if (finalG >= 255) finalG = 255;
-    		if (finalG <= 0) finalG = 0;
-    		if (finalR >= 255) finalR = 255;
-    		if (finalR <= 0) finalR = 0;
+	fs.release();                                         // close Settings file
 
-			new_s.val[0] = finalB;
-			new_s.val[1] = finalG;
-			new_s.val[2] = finalR;
-//    		printf("(i, j)=(%d, %d), B=%f, G=%f, R=%f\n", myround(col) , myround(row), s.val[0],s.val[1],s.val[2]);
-    		cvSet2D(newImg, i, j, new_s);
-    	}
-    // Create a image buffer for rotate 45 degree
-    rotateImg = cvCreateImage(cvSize(width,height), IPL_DEPTH_8U, channels);
-    rotate_data = (uchar *)rotateImg->imageData;
-    rotate_height = rotateImg->height;
-    rotate_width = rotateImg->width;
-    rotate_step = rotateImg->widthStep/sizeof(uchar);
-    printf( "Creating a rotate %dx%d image with %d channels\n" , rotate_height, rotate_width, channels);
-    // Using bilinear interpolation to rotate the image
-	col = 0.0;
-	row = 0.0;
-    for (i = 1; i < height - 2; i++)
-    	for (j = 1; j < width - 2; j++)
-    	{
-    		col = (double)i*cos(M_PI/4) - (double)j*sin(M_PI/4) + height/2;
-    		row = (double)i*sin(M_PI/4) + (double)j*cos(M_PI/4) - width/4;
-    		if (round(row) >= width - 1) {
-    			row = (double)width - 2;
-    		}
-    		if (round(col) >= height - 1) {
-    			col = (double)height - 2;
-    		}
-    		if (row <= 1) {
-    			row = 1;
-    		}
-    		if (col <= 1) {
-    			col = 1;
-    		}
-			// Get the intensity of the original image's nearest diagonal 4-neighbor pixels.
-			// Note that, accessing the pixel of i-row, j-column, the row indexing range is [0, height -1],
-			// column indexing range is [0, width - 1].
-//    		printf("Get intensity of col=%lf, row=%lf\n", col, row);
-    		q11 = cvGet2D(image, (int)round(col), (int)round(row) - 1);
-    		q22 = cvGet2D(image, (int)round(col), (int)round(row) + 1);
-    		q21 = cvGet2D(image, (int)round(col) + 1, (int)round(row));
-    		q12 = cvGet2D(image, (int)round(col) - 1, (int)round(row));
-    		// Bilinear interpolation.
-    		// round(row) + 1 is point x2, round(row) - 1 is point x1.
-    		factor1 = round(row) + 1 - row; // x2 - x
-    		factor2 = row - (round(row) - 1); // x - x1
-    		r1b = (q11.val[0] * factor1 / 2) + (q21.val[0] * factor2 / 2);
-    		r1g = (q11.val[1] * factor1 / 2) + (q21.val[1] * factor2 / 2);
-    		r1r = (q11.val[2] * factor1 / 2) + (q21.val[2] * factor2 / 2);
-    		r2b = (q12.val[0] * factor1 / 2) + (q22.val[0] * factor2 / 2);
-    		r2g = (q12.val[1] * factor1 / 2) + (q22.val[1] * factor2 / 2);
-    		r2r = (q12.val[2] * factor1 / 2) + (q22.val[2] * factor2 / 2);
+	cout << "Calibration Time: " << calibration_Time << endl;
 
-    		factor3 = round(col) + 1 - col; // y2 - y
-    		factor4 = col - (round(col) - 1); // y - y1
-    		finalB = (r1b * factor3) / 2 + r2b * factor4 / 2; // Blue
-    		finalG = (r1g * factor3) / 2 + r2g * factor4 / 2; // Green
-    		finalR = (r1r * factor3) / 2 + r2r * factor4 / 2; // Red
-    		// Clamp the RBG values to a value between 0 and 255
-    		if (finalB >= 255) finalB = 255;
-    		if (finalB <= 0) finalB = 0;
-    		if (finalG >= 255) finalG = 255;
-    		if (finalG <= 0) finalG = 0;
-    		if (finalR >= 255) finalR = 255;
-    		if (finalR <= 0) finalR = 0;
+	view = imread("1.png", CV_LOAD_IMAGE_COLOR);
+	imshow("Image View", view);
+	imageSize = view.size();
 
-			new_s.val[0] = finalB;
-			new_s.val[1] = finalG;
-			new_s.val[2] = finalR;
+	initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),
+		getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0),
+		imageSize, CV_16SC2, map1, map2);
+	remap(view, rview, map1, map2, INTER_LINEAR);
+	imshow("Undistortion Image View", rview);
+	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+	compression_params.push_back(95);
+	imwrite("undistor_1.jpg", rview, compression_params);
 
-    		if (row >= width - 2) {
-        		new_s.val[0] = 111; // Blue
-        		new_s.val[1] = 111; // Green
-        		new_s.val[2] = 111; // Red
-    		}
-    		if (col >= height - 2) {
-           		new_s.val[0] = 111; // Blue
-            	new_s.val[1] = 111; // Green
-            	new_s.val[2] = 111; // Red
-    		}
-    		if (row <= 1) {
-           		new_s.val[0] = 111; // Blue
-            	new_s.val[1] = 111; // Green
-            	new_s.val[2] = 111; // Red
-    		}
-    		if (col <= 1) {
-           		new_s.val[0] = 111; // Blue
-            	new_s.val[1] = 111; // Green
-            	new_s.val[2] = 111; // Red
-    		}
-//    		printf("Set intensity of col=%lf, row=%lf\n", col, row);
-    		cvSet2D(rotateImg, i, j, new_s);
-    	}
+	char c = (char)waitKey();
 
-    // create a window
-    cvNamedWindow( "mainWin", CV_WINDOW_AUTOSIZE );
-    cvMoveWindow( "mainWin", 100, 50);
-    cvNamedWindow( "zoomWin", CV_WINDOW_AUTOSIZE );
-    cvMoveWindow( "zoomWin", 300, 50);
-    cvNamedWindow( "rotateWin", CV_WINDOW_AUTOSIZE );
-    cvMoveWindow( "rotateWin", 500, 50);
+	if (!s.goodInput)
+	{
+		cout << "Invalid input detected. Application stopping. " << endl;
+		return -1;
+	}
 
-    // show the image
-    cvShowImage( "mainWin", image);
-    cvShowImage( "zoomWin", newImg);
-    cvShowImage( "rotateWin", rotateImg);
-    // save the image
-    cvSaveImage("B_ZoomIn.jpg",newImg);
-    cvSaveImage("B_Rotate.jpg",rotateImg);
-    // wait for a key
-    cvWaitKey(0);
-
-    // release the image
-    cvReleaseImage(&image);
-    cvReleaseImage(&newImg);
-    cvReleaseImage(&rotateImg);
-    return 0;
 }
 
