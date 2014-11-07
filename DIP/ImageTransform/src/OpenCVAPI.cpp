@@ -1,9 +1,11 @@
 /*
- * bilinear.cpp
+ * OpenCVAPPI.cpp
  *
  *  Created on: 2014/11/4
  *      Author: Chun-Hsien Lin (D03922030)
- * Description:
+ * Description: Using OpenCV API and camera calibration data
+ *              to reconstruct the distortion image acquired
+ *               from fish eye lens.
  *
  */
 #include <iostream>

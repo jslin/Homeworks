@@ -18,5 +18,8 @@
     <ClCompile Include="src\LookupTable.cpp">
       <Filter>原始程式檔</Filter>
     </ClCompile>
+    <ClCompile Include="src\OpenCVAPI.cpp">
+      <Filter>原始程式檔</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
