@@ -25,6 +25,7 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+#define PI 3.14159265
 
 using namespace std;
 using namespace cv;
@@ -137,20 +138,17 @@ int main(int argc, const char * argv[])
 	};
 	IplImage * image;
 	IplImage * newImg;
-//	IplImage * undistortImg;
+
 	int height, width, step, channels, depth;
 	int new_height, new_width, new_step;
-//	int undistort_height, undistort_width, undistort_step;
+	int lutIdx;
+	int xr, yr;
+	double theta_fov, theta;
 	uchar *data;
 	uchar *new_data;
-//	uchar *undistort_data;
 	int i, j;
 	CvScalar new_s;
-	double col, row;
-	double r1r, r1g, r1b, r2r, r2g, r2b;
-	double factor1, factor2, factor3, factor4;
-	CvScalar q11, q12, q21, q22;
-	int finalR, finalG, finalB;
+	CvScalar fisheyeDot;
 
 	image = cvLoadImage(argv[1], 1);
 
@@ -176,64 +174,51 @@ int main(int argc, const char * argv[])
 	new_step = newImg->widthStep / sizeof(uchar);
 	printf("Creating a new %dx%d image with %d channels for undistortion.\n", new_height, new_width, channels);
 	// Using bilinear interpolation
-	for (i = 1; i < new_height - 2; i++)
-		for (j = 1; j < new_width - 2; j++)
+	for (i = 0; i < new_height; i++)
+		for (j = 0; j < new_width; j++)
 		{
-		// incremental step for original image column and row.
-		col = (float)i * height / new_height;
-		row = (float)j * width / new_width;
-		// Get the intensity of the original image's nearest diagonal 4-neighbor pixels.
-		// Note that, accessing the pixel of i-row, j-column, the row indexing range is [0, height -1],
-		// column indexing range is [0, width - 1].
-		q11 = cvGet2D(image, round(col) - 1, round(row) - 1);
-		q22 = cvGet2D(image, round(col) + 1, round(row) + 1);
-		q21 = cvGet2D(image, round(col) + 1, round(row) - 1);
-		q12 = cvGet2D(image, round(col) - 1, round(row) + 1);
-		// Bilinear interpolation.
-		// round(row) + 1 is point x2. round(row) - 1 is point x1.
-		factor1 = round(row) + 1 - row; // x2 - x
-		factor2 = row - (round(row) - 1); // x - x1
-		r1b = (q11.val[0] * factor1 / 2) + (q21.val[0] * factor2 / 2);
-		r1g = (q11.val[1] * factor1 / 2) + (q21.val[1] * factor2 / 2);
-		r1r = (q11.val[2] * factor1 / 2) + (q21.val[2] * factor2 / 2);
-		r2b = (q12.val[0] * factor1 / 2) + (q22.val[0] * factor2 / 2);
-		r2g = (q12.val[1] * factor1 / 2) + (q22.val[1] * factor2 / 2);
-		r2r = (q12.val[2] * factor1 / 2) + (q22.val[2] * factor2 / 2);
+		// Scanning the new image from up-left corner to bottom-right.
+		// 1. Calculate the theta of (x, y)
+		// 2. find out the theta of FOV
+		// 3. find out the look up table index by theta of FOV  divided by 0.9.
+		// 4. query out the displacement from table
+		// 5. find out the dot on fish-eye image.
+		// 6. Filling in the fish-eye dot into the new image.
+		// 7. again step 1 until scan finished.
+			theta = atan((i+499)/(j+499)) * 180 / PI;
+			theta_fov = 0.15 * sqrt(pow((i-499),2) + pow((j-499), 2));
+			lutIdx = round(theta_fov / 0.9);
+//			printf("(i,j) = (%d, %d), theta = %f, theta of FOV = %f, lut index = %d\n", i, j, theta, theta_fov, lutIdx);
+			xr = 360 + round(lut[lutIdx]*cos(theta));
+			yr = 240 + round(lut[lutIdx]*sin(theta));
+			if (xr < 0) xr = 0;
+			if (xr >= 720) xr = 719;
+			if (yr < 0) yr = 0;
+			if (yr >= 480) yr = 479;
+//			printf("(xr, yr) = (%d, %d)\n", xr, yr);
 
-		factor3 = round(col) + 1 - col; // y2 - y
-		factor4 = col - (round(col) - 1); // y - y1
-		finalB = (r1b * factor3) / 2 + r2b * factor4 / 2; // Blue
-		finalG = (r1g * factor3) / 2 + r2g * factor4 / 2; // Green
-		finalR = (r1r * factor3) / 2 + r2r * factor4 / 2; // Red
-		// Clamp the RBG values to a value between 0 and 255
-		if (finalB >= 255) finalB = 255;
-		if (finalB <= 0) finalB = 0;
-		if (finalG >= 255) finalG = 255;
-		if (finalG <= 0) finalG = 0;
-		if (finalR >= 255) finalR = 255;
-		if (finalR <= 0) finalR = 0;
+			fisheyeDot = cvGet2D(image, yr, xr);
+			new_s.val[0] = fisheyeDot.val[0]; // Blue
+			new_s.val[1] = fisheyeDot.val[1]; // Green
+			new_s.val[2] = fisheyeDot.val[2]; // Red
+//			printf("Setting new image.\n");
+			cvSet2D(newImg, j, i, new_s);
 
-		new_s.val[0] = finalB;
-		new_s.val[1] = finalG;
-		new_s.val[2] = finalR;
-		//    		printf("(i, j)=(%d, %d), B=%f, G=%f, R=%f\n", myround(col) , myround(row), s.val[0],s.val[1],s.val[2]);
-		cvSet2D(newImg, i, j, new_s);
-		}
+	};
 	
-
 	// create a window
 	cvNamedWindow("mainWin", CV_WINDOW_AUTOSIZE);
 	cvMoveWindow("mainWin", 100, 50);
-	cvNamedWindow("zoomWin", CV_WINDOW_AUTOSIZE);
-	cvMoveWindow("zoomWin", 300, 50);
+	cvNamedWindow("undistortedWin", CV_WINDOW_AUTOSIZE);
+	cvMoveWindow("undistortedWin", 300, 50);
 
 
 	// show the image
 	cvShowImage("mainWin", image);
-	cvShowImage("zoomWin", newImg);
+	cvShowImage("undistortedWin", newImg);
 
 	// save the image
-	cvSaveImage("lut_1.jpg", newImg);
+//	cvSaveImage("lut_1.jpg", newImg);
 	// wait for a key
 	cvWaitKey(0);
 
