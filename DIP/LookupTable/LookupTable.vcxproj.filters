@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\OpenCVAPI.cpp">
+    <ClCompile Include="..\ImageTransform\src\LookupTable.cpp">
       <Filter>原始程式檔</Filter>
     </ClCompile>
   </ItemGroup>
