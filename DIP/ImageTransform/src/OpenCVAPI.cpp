@@ -215,7 +215,7 @@ static void read(const FileNode& node, Settings& x, const Settings& default_valu
 }
 
 
-int sudo_main(int argc, const char * argv[])
+int main(int argc, const char * argv[])
 {
 	Settings s;
 	std::string calibration_Time;

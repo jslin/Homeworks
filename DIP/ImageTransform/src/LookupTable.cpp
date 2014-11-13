@@ -143,6 +143,7 @@ int main(int argc, const char * argv[])
 	int new_height, new_width, new_step;
 	int lutIdx;
 	int xr, yr;
+	int x, y;
 	double theta_fov, theta;
 	uchar *data;
 	uchar *new_data;
@@ -150,7 +151,8 @@ int main(int argc, const char * argv[])
 	CvScalar new_s;
 	CvScalar fisheyeDot;
 
-	image = cvLoadImage(argv[1], 1);
+//	image = cvLoadImage(argv[1], 1);
+	image = cvLoadImage("1.png", 1);
 
 	if (argc != 2 || !image)
 	{
@@ -184,9 +186,19 @@ int main(int argc, const char * argv[])
 		// 4. query out the displacement from table
 		// 5. find out the dot on fish-eye image.
 		// 6. Filling in the fish-eye dot into the new image.
-		// 7. again step 1 until scan finished.
-			theta = atan((i+499)/(j+499)) * 180 / PI;
-			theta_fov = 0.15 * sqrt(pow((i-499),2) + pow((j-499), 2));
+		// 7. Repeat step 1 until scan finished.
+			x = i - 499;
+			y = 499 - j;
+			if (y == 0) {
+				if (j >= 499)
+					theta = 360;
+				else
+					theta = 0;
+			}
+			else {
+				theta = 180 + (atan(x / y) * 180 / PI);
+			};
+			theta_fov = 0.15 * sqrt(pow((i-499),2) + pow((499-j), 2));
 			lutIdx = round(theta_fov / 0.9);
 //			printf("(i,j) = (%d, %d), theta = %f, theta of FOV = %f, lut index = %d\n", i, j, theta, theta_fov, lutIdx);
 			xr = 360 + round(lut[lutIdx]*cos(theta));
@@ -203,7 +215,6 @@ int main(int argc, const char * argv[])
 			new_s.val[2] = fisheyeDot.val[2]; // Red
 //			printf("Setting new image.\n");
 			cvSet2D(newImg, j, i, new_s);
-
 	};
 	
 	// create a window
