@@ -27,7 +27,6 @@ def grayErosion(imageBuffer, kernel):
         for i in range(width):
             for j in range(height):
                 minValue = 255
-                # for kernel b, check x + b are belong to a or not.
                 for k in range(len(kernel)):
                     p = kernel[k][0]
                     q = kernel[k][1]
