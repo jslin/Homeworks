@@ -10,3 +10,5 @@
 使用 Pillow 程式庫來處理圖檔的讀寫。
 (http://pillow.readthedocs.org/en/latest/index.html)
 """
+from __future__ import print_function
+from PIL import Image
