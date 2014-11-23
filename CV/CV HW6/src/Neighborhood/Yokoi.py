@@ -77,7 +77,7 @@ def yokoi(im):
     with open('yokoi.txt', 'w') as yokoifile:
         width = im.size[0]
         height = im.size[1]
-        # Because of the input image will be transpose.
+        # Because of the input image will be transposed.
         # We transpose the index of image pixel for output.
         #
         for i in range(1, height - 1):
