@@ -88,10 +88,7 @@ def yokoi(im):
                     a3 = h(im.getpixel((j, i)), im.getpixel((j-1, i)), im.getpixel((j-1, i+1)), im.getpixel((j, i+1)))
                     a4 = h(im.getpixel((j, i)), im.getpixel((j, i+1)), im.getpixel((j+1, i+1)), im.getpixel((j+1, i)))
                     out = f(a1,a2,a3,a4)
-                    if out == 0:
-                        yokoifile.write('*')
-                    else:
-                        yokoifile.write(str(out))
+                    yokoifile.write(str(out))
                 else:
                     yokoifile.write(' ')
             yokoifile.write('\n')
