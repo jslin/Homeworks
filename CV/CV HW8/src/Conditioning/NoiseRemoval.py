@@ -21,6 +21,18 @@ def main():
 
         GNIm = GaussNoiseImage(im, 10)
         GNIm.show()
+        GNIm.save("10GN_Lena.bmp")
+        SPIm = SNPNoiseImage(im, 0.05)
+        SPIm.show()
+        SPIm.save("05_SP_Lena.bmp")
+        BFIm = BoxFilter(GNIm, 3)
+        BFIm.show()
+        BFIm = BoxFilter(GNIm, 5)
+        BFIm.show()
+        BFIm = BoxFilter(SPIm, 3)
+        BFIm.show()
+        BFIm = BoxFilter(SPIm, 5)
+        BFIm.show()
     except IOError:
         print("cannot open lena")
     finally:
@@ -41,6 +53,42 @@ def GaussNoiseImage(image, amplitude):
             if gn_pix > 255:
                 gn_pix = 255
             noiseIm.putpixel((i,j), gn_pix)
+    return noiseIm
+
+def SNPNoiseImage(image, threshold):
+    im = image.copy()
+    width = im.size[0]
+    height = im.size[1]
+    noiseIm = Image.new("L",(width, height), 0)
+    for i in range(width):
+        for j in range(height):
+            rnd = random.uniform(0, 1)
+            pix_value = im.getpixel((i,j))                
+            if threshold > rnd:
+                noiseIm.putpixel((i,j), 0)
+            else: 
+                if 1 - threshold < rnd:
+                    noiseIm.putpixel((i,j), 255)
+                else:
+                    noiseIm.putpixel((i,j), pix_value)
+    return noiseIm
+
+def BoxFilter(image, n):
+    im =image.copy()
+    halfN = n / 2
+    normalizeCoefficient = n * n
+    width = im.size[0]
+    height = im.size[1]
+    W = width - halfN
+    H = height - halfN
+    noiseIm = Image.new("L",(width, height), 255)
+    for i in range(halfN, H):
+        for j in range(halfN, W):
+            boxSum = 0
+            for x in range(-halfN, halfN):
+                for y in range(-halfN, halfN):
+                    boxSum = boxSum + im.getpixel((x+i,y+j))
+            noiseIm.putpixel((i,j), 255 - (boxSum / normalizeCoefficient))
     return noiseIm
 
 main()
