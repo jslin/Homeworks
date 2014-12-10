@@ -18,13 +18,42 @@ def main():
     try:
         im = Image.open("lena.bmp", "r")
         im.load() # load image data into memory.
-
+        octangon = [(-1,2,0),(0,2,0),(1,2,0),(-2,1,0),(-1,1,0),(0,1,0),(1,1,0),(2,1,0),(-2,1,0),(-1,1,0),(0,1,0),(1,1,0),(2,1,0),(-2,0,0),(-1,0,0),(0,0,0),(1,0,0),(2,0,0),(-2,-1,0),(-1,-1,0),(0,-1,0),(1,-1,0),(2,-1,0),(-1,-2,0),(0,-2,0),(1,-2,0)]   
+        
         GNIm = GaussNoiseImage(im, 10)
-        GNIm.show()
+        GNIm.show("Gaussian Noise with amplitude = 10")
         GNIm.save("10GN_Lena.bmp")
         SPIm = SNPNoiseImage(im, 0.05)
-        SPIm.show()
+        SPIm.show("Salt and Pepper Noise with coef=0.05")
         SPIm.save("05_SP_Lena.bmp")
+        BFIm = BoxFilter(GNIm, 3)
+        BFIm.show("3x3 Box Filter on Gaussian Noise image")
+        BFIm = BoxFilter(GNIm, 5)
+        BFIm.show("5x5 Box Filter on Gaussian Noise image")
+        BFIm = BoxFilter(SPIm, 3)
+        BFIm.show()
+        BFIm = BoxFilter(SPIm, 5)
+        BFIm.show()
+        
+        eroImage = grayErosion(GNIm, octangon)
+        dilImage = grayDilation(GNIm, octangon)
+        # Opening
+        openingImage = grayDilation(eroImage, octangon)
+        openingImage.show("Opening")
+        # Closeing
+        closingImage = grayErosion(dilImage, octangon)
+        closingImage.show("Closing")
+        # Closing
+        eroImage = grayErosion(SPIm, octangon)
+        dilImage = grayDilation(SPIm, octangon)
+        
+        
+        GNIm = GaussNoiseImage(im, 30)
+        GNIm.show()
+        GNIm.save("30GN_Lena.bmp")
+        SPIm = SNPNoiseImage(im, 0.1)
+        SPIm.show()
+        SPIm.save("1_SP_Lena.bmp")
         BFIm = BoxFilter(GNIm, 3)
         BFIm.show()
         BFIm = BoxFilter(GNIm, 5)
@@ -36,6 +65,7 @@ def main():
     except IOError:
         print("cannot open lena")
     finally:
+        BFIm.close()
         GNIm.close()
         im.close()
 
@@ -88,7 +118,73 @@ def BoxFilter(image, n):
             for x in range(-halfN, halfN):
                 for y in range(-halfN, halfN):
                     boxSum = boxSum + im.getpixel((x+i,y+j))
-            noiseIm.putpixel((i,j), 255 - (boxSum / normalizeCoefficient))
+            noiseIm.putpixel((i,j), (boxSum / normalizeCoefficient))
     return noiseIm
+
+def grayDilation(imageBuffer, kernel):
+    try:
+        imageBuffer.load() # load image data into memory.
+        width = imageBuffer.size[0]
+        height = imageBuffer.size[1]
+        inputIm = imageBuffer.copy()
+
+    # Create a blank image, fill up with color = 0 (white).
+        dilIm = Image.new("L",(width, height), 0)
+    # Using Dilation definition to implement.
+    #
+        for i in range(width):
+            for j in range(height):
+                maxValue = 0
+                for k in range(len(kernel)):
+                    p = kernel[k][0]
+                    q = kernel[k][1]
+                    value = kernel[k][2]
+                    temp = inputIm.getpixel((i,j))
+                    x = i - p
+                    y = j - q
+                    if (x >= 0) and (x < width) and (y >= 0) and (y < height):
+                        temp = inputIm.getpixel((x,y)) + value
+                    if temp > maxValue:
+                        maxValue = temp
+                    dilIm.putpixel((i,j), maxValue)
+        inputIm.close()
+    except IOError:
+        print("cannot open lena")
+    finally:
+        inputIm.close()
+    return dilIm
+
+def grayErosion(imageBuffer, kernel):
+    try:
+        imageBuffer.load() # load image data into memory.
+        width = imageBuffer.size[0]
+        height = imageBuffer.size[1]
+        inputIm = imageBuffer.copy()
+
+    # Create a blank image, fill up with color = 0 (white).
+        eroIm = Image.new("L",(width, height), 0)
+    # Using Erosion definition to implement.
+    #
+        for i in range(width):
+            for j in range(height):
+                minValue = 255
+                for k in range(len(kernel)):
+                    p = kernel[k][0]
+                    q = kernel[k][1]
+                    value = kernel[k][2]
+                    temp = inputIm.getpixel((i,j))
+                    x = i + p
+                    y = j + q
+                    if (x >= 0) and (x < width) and (y >= 0) and (y < height):
+                        temp = inputIm.getpixel((x,y)) - value
+                    if temp < minValue:
+                        minValue = temp
+                    eroIm.putpixel((i,j), minValue)
+        inputIm.close()
+    except IOError:
+        print("cannot open lena")
+    finally:
+        inputIm.close()
+    return eroIm
 
 main()
