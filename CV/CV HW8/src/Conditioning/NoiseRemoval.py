@@ -28,40 +28,123 @@ def main():
         SPIm.save("05_SP_Lena.bmp")
         BFIm = BoxFilter(GNIm, 3)
         BFIm.show("3x3 Box Filter on Gaussian Noise image")
+        BFIm.save("3x3_BF_10GNLena.bmp")
         BFIm = BoxFilter(GNIm, 5)
         BFIm.show("5x5 Box Filter on Gaussian Noise image")
+        BFIm.save("5x5_BF_10GNLena.bmp")
         BFIm = BoxFilter(SPIm, 3)
         BFIm.show()
+        BFIm.save("3x3_BF_05SNPLena.bmp")
         BFIm = BoxFilter(SPIm, 5)
         BFIm.show()
+        BFIm.save("5x5_BF_05SNPLena.bmp")
+        MFIm = medianFilter(GNIm, 3)
+        MFIm.show()
+        MFIm.save("3x3_MF_10GNLena.bmp")
+        MFIm = medianFilter(GNIm, 5)
+        MFIm.show()
+        MFIm.save("5x5_MF_10GNLena.bmp")
+        MFIm = medianFilter(SPIm, 3)
+        MFIm.show("3x3 median filter on Gaussian Noise image")
+        MFIm.save("3x3_MF_05SNPLena.bmp")
+        MFIm = medianFilter(SPIm, 5)
+        MFIm.show("5x5 median filter on Gaussian Noise image")
+        MFIm.save("5x5_MF_05SNPLena.bmp")
         
         eroImage = grayErosion(GNIm, octangon)
         dilImage = grayDilation(GNIm, octangon)
+        # Opening Gaussian noise image
+        openingImage = grayDilation(eroImage, octangon)
+        openingImage.show("Opening")
+        # Closing followed by opening
+        CFOIm = grayErosion(openingImage, octangon)
+        CFOIm.show()
+        CFOIm.save("close_open_10GNLena.bmp")
+        # Closing
+        closingImage = grayErosion(dilImage, octangon)
+        closingImage.show("Closing")
+        # Opening followed by closing
+        OFCIm = grayDilation(closingImage, octangon)
+        OFCIm.save("open_close_10GNLena.bmp")
+        # Salt and pepper noise image
+        eroImage = grayErosion(SPIm, octangon)
+        dilImage = grayDilation(SPIm, octangon)
         # Opening
         openingImage = grayDilation(eroImage, octangon)
         openingImage.show("Opening")
-        # Closeing
+        # Closing followed by opening
+        CFOIm = grayErosion(openingImage, octangon)
+        CFOIm.show()
+        CFOIm.save("close_open_05SNPLena.bmp")
+        # Closing
         closingImage = grayErosion(dilImage, octangon)
         closingImage.show("Closing")
-        # Closing
-        eroImage = grayErosion(SPIm, octangon)
-        dilImage = grayDilation(SPIm, octangon)
-        
+        # Opening followed by closing
+        OFCIm = grayDilation(closingImage, octangon)
+        OFCIm.save("open_close_05SNPLena.bmp")
         
         GNIm = GaussNoiseImage(im, 30)
-        GNIm.show()
+        GNIm.show("Gaussian Noise with amplitude = 30")
         GNIm.save("30GN_Lena.bmp")
         SPIm = SNPNoiseImage(im, 0.1)
-        SPIm.show()
+        SPIm.show("Salt and Pepper Noise with coef=0.1")
         SPIm.save("1_SP_Lena.bmp")
         BFIm = BoxFilter(GNIm, 3)
-        BFIm.show()
+        BFIm.show("3x3 Box Filter on Gaussian Noise image")
+        BFIm.save("3x3_BF_30GNLena.bmp")
         BFIm = BoxFilter(GNIm, 5)
-        BFIm.show()
+        BFIm.show("5x5 Box Filter on Gaussian Noise image")
+        BFIm.save("5x5_BF_30GNLena.bmp")
         BFIm = BoxFilter(SPIm, 3)
         BFIm.show()
+        BFIm.save("3x3_BF_1_SNPLena.bmp")
         BFIm = BoxFilter(SPIm, 5)
         BFIm.show()
+        BFIm.save("5x5_BF_1_SNPLena.bmp")
+        MFIm = medianFilter(GNIm, 3)
+        MFIm.show()
+        MFIm.save("3x3_MF_30GNLena.bmp")
+        MFIm = medianFilter(GNIm, 5)
+        MFIm.show()
+        MFIm.save("5x5_MF_30GNLena.bmp")
+        MFIm = medianFilter(SPIm, 3)
+        MFIm.show("3x3 median filter on Gaussian Noise image")
+        MFIm.save("3x3_MF_1_SNPLena.bmp")
+        MFIm = medianFilter(SPIm, 5)
+        MFIm.show("5x5 median filter on Gaussian Noise image")
+        MFIm.save("5x5_MF_1_SNPLena.bmp")
+        
+        eroImage = grayErosion(GNIm, octangon)
+        dilImage = grayDilation(GNIm, octangon)
+        # Opening Gaussian noise image
+        openingImage = grayDilation(eroImage, octangon)
+        openingImage.show("Opening")
+        # Closing followed by opening
+        CFOIm = grayErosion(openingImage, octangon)
+        CFOIm.show()
+        CFOIm.save("close_open_30GNLena.bmp")
+        # Closing
+        closingImage = grayErosion(dilImage, octangon)
+        closingImage.show("Closing")
+        # Opening followed by closing
+        OFCIm = grayDilation(closingImage, octangon)
+        OFCIm.save("open_close_30GNLena.bmp")
+        # Salt and pepper noise image
+        eroImage = grayErosion(SPIm, octangon)
+        dilImage = grayDilation(SPIm, octangon)
+        # Opening
+        openingImage = grayDilation(eroImage, octangon)
+        openingImage.show("Opening")
+        # Closing followed by opening
+        CFOIm = grayErosion(openingImage, octangon)
+        CFOIm.show()
+        CFOIm.save("close_open_1SNPLena.bmp")
+        # Closing
+        closingImage = grayErosion(dilImage, octangon)
+        closingImage.show("Closing")
+        # Opening followed by closing
+        OFCIm = grayDilation(closingImage, octangon)
+        OFCIm.save("open_close_1SNPLena.bmp")
     except IOError:
         print("cannot open lena")
     finally:
@@ -111,15 +194,34 @@ def BoxFilter(image, n):
     height = im.size[1]
     W = width - halfN
     H = height - halfN
-    noiseIm = Image.new("L",(width, height), 255)
+    filteredIm = Image.new("L",(width, height), 255)
     for i in range(halfN, H):
         for j in range(halfN, W):
             boxSum = 0
-            for x in range(-halfN, halfN):
-                for y in range(-halfN, halfN):
-                    boxSum = boxSum + im.getpixel((x+i,y+j))
-            noiseIm.putpixel((i,j), (boxSum / normalizeCoefficient))
-    return noiseIm
+            for x in range(-halfN, halfN+1):
+                for y in range(-halfN, halfN+1):
+                    boxSum = boxSum + im.getpixel((x+i,y+j)) / normalizeCoefficient
+            filteredIm.putpixel((i,j), boxSum)
+    return filteredIm
+
+def medianFilter(image, n):
+    im =image.copy()
+    halfN = n / 2
+    kernelLen = n * n
+    width = im.size[0]
+    height = im.size[1]
+    W = width - halfN
+    H = height - halfN
+    filteredIm = Image.new("L",(width, height), 255)
+    for i in range(halfN, H):
+        for j in range(halfN, W):
+            boxList = []
+            for x in range(-halfN, halfN+1):
+                for y in range(-halfN, halfN+1):
+                    boxList.append(im.getpixel((x+i,y+j)))
+            boxList.sort()
+            filteredIm.putpixel((i,j), boxList[kernelLen/2])
+    return filteredIm
 
 def grayDilation(imageBuffer, kernel):
     try:
