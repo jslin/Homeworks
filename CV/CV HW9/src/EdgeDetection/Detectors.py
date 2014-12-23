@@ -22,7 +22,7 @@ def main():
     Frei(im, 100)
     Kirsch(im, 230)
     Robinson(im, 100)
-#    NevatiaBabu(im, 30)
+    NevatiaBabu(im, 25000)
 
 def Roberts(imageBuffer, threshold):
     R1Kernel = [(-1,0),(0,1)]
@@ -245,6 +245,50 @@ def Robinson(imageBuffer, threshold):
                     edgeIm.putpixel((j,i), 0)
         edgeIm.show()
         edgeIm.save("Robinson_lena.bmp")
+        return edgeIm
+    except IOError:
+        print("cannot open lena")
+    finally:
+        inputIm.close()
+        edgeIm.close()
+
+def NevatiaBabu(imageBuffer, threshold):
+    r0Kernel = [(100,100,100,100,100),(100,100,100,100,100),(0,0,0,0,0),(-100,-100,-100,-100,-100),(-100,-100,-100,-100,-100)]
+    r1Kernel = [(100,100,100,100,100),(100,100,100,78,-32),(100,92,0,-92,-100),(32,-78,-100,-100,-100),(-100,-100,-100,-100,-100)]
+    r2Kernel = [(100,100,100,32,-100),(100,100,92,-78,-100),(100,100,0,-100,-100),(100,78,-92,-100,-100),(100,-32,-100,-100,-100)]
+    r3Kernel = [(-100,-100,0,100,100),(-100,-100,0,100,100),(-100,-100,0,100,100),(-100,-100,0,100,100),(-100,-100,0,100,100)]
+    r4Kernel = [(-100,32,100,100,100),(-100,-78,92,100,100),(-100,-100,0,100,100),(-100,-100,-92,78,100),(-100,-100,-100,-32,100)]
+    r5Kernel = [(100,100,100,100,100),(-32,78,100,100,100),(-100,-92,0,92,100),(-100,-100,-100,-78,32),(-100,-100,-100,-100,-100)]
+    try:
+        imageBuffer.load() # load image data into memory.
+        width = imageBuffer.size[0]
+        height = imageBuffer.size[1]
+        inputIm = imageBuffer.copy()
+        # Create a blank image, fill up with color = 255 (white).
+        edgeIm = Image.new("L",(width, height), 255)
+        for i in range(width-4):
+            for j in range(height-4):
+                gradient = 0
+                r0 = 0
+                r1 = 0
+                r2 = 0
+                r3 = 0
+                r4 = 0
+                r5 = 0
+                for x in range(5):
+                    for y in range(5):
+#                        print("x=",x,"y=",y)
+                        r0 = r0 + inputIm.getpixel((j+x,i+y))* r0Kernel[x][y]
+                        r1 = r1 + inputIm.getpixel((j+x,i+y))* r1Kernel[x][y]
+                        r2 = r2 + inputIm.getpixel((j+x,i+y))* r2Kernel[x][y]
+                        r3 = r3 + inputIm.getpixel((j+x,i+y))* r3Kernel[x][y]
+                        r4 = r4 + inputIm.getpixel((j+x,i+y))* r4Kernel[x][y]
+                        r5 = r5 + inputIm.getpixel((j+x,i+y))* r5Kernel[x][y]
+                gradient = max(r0,r1,r2,r3,r4,r5)
+                if (gradient > threshold) :
+                    edgeIm.putpixel((j,i), 0)
+        edgeIm.show()
+        edgeIm.save("NevatiaBabu_lena.bmp")
         return edgeIm
     except IOError:
         print("cannot open lena")
